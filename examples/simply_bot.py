@@ -16,6 +16,9 @@
 
 import asyncio
 import euphoria
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 loop = asyncio.get_event_loop()
 room = input("room name> ")
@@ -26,7 +29,7 @@ async def main_task():
     asyncio.ensure_future(bot.start())
     stream = await bot.stream()
     hello = await stream.skip_until(euphoria.HelloEvent)
-    print("We're connected, hello-event received!")
+    logging.info("We're connected, hello-event received!")
 
     loop.create_task(authenticate())
 
@@ -35,33 +38,33 @@ async def main_task():
             ping = await stream.skip_until(euphoria.PingEvent)
             await bot.send_ping_reply(ping.data.time)
     except asyncio.CancelledError:
-        print("We're done here.")
+        logging.info("We're done here")
 
 async def authenticate():
     auth_reply_future = await bot.send_auth(passcode)
     auth_reply = await auth_reply_future
     if not auth_reply.data.success:
-        print("Failed to authenticate.")
+        logging.error("Failed to authenticate")
         bot.close()
         return
 
-    print("Authenticated.")
+    logging.info("Authenticated")
 
     nick_reply_future = await bot.send_nick("simple_bot")
     nick_reply = await nick_reply_future
     if nick_reply.error:
-        print("Failed to set nick: {0}".format(nick_reply.error))
+        logging.error("Failed to set nick: {0}".format(nick_reply.error))
         bot.close()
         return
 
-    print("Nick set.")
+    logging.info("Nick set")
     await send_event_loop()
 
 async def send_event_loop():
     stream = await bot.stream()
     while True:
         send_event = await stream.skip_until(euphoria.SendEvent)
-        print("{0}: {1}".format(
+        logging.info("{0}: {1}".format(
             send_event.data.sender.name, send_event.data.content))
         if send_event.data.content == "!quit":
             await bot.close()

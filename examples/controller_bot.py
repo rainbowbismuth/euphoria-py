@@ -17,6 +17,9 @@
 import asyncio
 import euphoria
 import euphoria.controller as ctlr
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 loop = asyncio.get_event_loop()
 room = input("room name> ")

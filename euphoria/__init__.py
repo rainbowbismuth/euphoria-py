@@ -18,6 +18,9 @@ import asyncio
 import websockets
 import json
 import inspect
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Packet:
@@ -40,6 +43,8 @@ class Packet:
     def data(self):
         if self.error:
             raise Exception(self.error)
+        if self.throttled:
+            raise Exception(self.throttled_reason)
         return self._data
 
 
@@ -229,6 +234,8 @@ class EuphoriaBot:
         if self.closed:
             return
 
+        logger.info("{0} closing".format(self))
+
         self._connected.clear()
         self._closed.set()
 
@@ -249,6 +256,8 @@ class EuphoriaBot:
             stream.close()
         self._streams = set()
 
+        logger.debug("{0} closed".format(self))
+
     async def stream(self):
         await self.wait_until_connected()
         stream = EuphoriaStream(loop=self._loop)
@@ -260,12 +269,16 @@ class EuphoriaBot:
         assert self._sender == None
         assert self._receiver == None
 
+        logger.info("{0} connecting to {1}".format(self, self._uri))
         self._sock = await websockets.connect(self._uri)
+
         self._sender = asyncio.ensure_future(self._send_loop(),
                                              loop=self._loop)
         self._receiver = asyncio.ensure_future(self._recv_loop(),
                                                loop=self._loop)
         self._connected.set()
+        logger.info("{0} connected".format(self))
+
         await self._wait_then_close()
 
     async def _wait_then_close(self):
@@ -278,6 +291,7 @@ class EuphoriaBot:
     async def _send_loop(self):
         while self.connected:
             msg = await self._outgoing.get()
+            logger.debug("{0} sending message {1}".format(self, msg))
             await self._sock.send(msg)
 
     async def _recv_loop(self):
@@ -285,6 +299,7 @@ class EuphoriaBot:
             msg = await self._sock.recv()
             if msg == None:
                 return
+            logger.debug("{0} got message {1}".format(self, msg))
             packet = Packet(json.loads(msg))
             if packet.id != None:
                 fut = self._take_reply_future(packet.id)
