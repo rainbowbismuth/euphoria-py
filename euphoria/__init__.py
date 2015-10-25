@@ -37,10 +37,14 @@ class Packet:
         self.throttled_reason = j.get('throttled_reason', None)
 
     def is_type(self, type_):
+        """Returns whether or not this packet contains data of the given type."""
         return self.data and isinstance(self.data, type_)
 
     @property
     def data(self):
+        """Returns the data part of the Packet.
+
+        Throws an exception if the Packet contains an error message or a throttle request."""
         if self.error:
             raise Exception(self.error)
         if self.throttled:
@@ -206,31 +210,39 @@ class EuphoriaBot:
 
     @property
     def room(self):
+        """The room this bot may be connected to."""
         return self._room
 
     @property
     def uri(self):
+        """The URI this bot will connect to."""
         return self._uri
 
     @property
     def loop(self):
+        """The asyncio event loop this bot uses."""
         return self._loop
 
     @property
     def connected(self):
+        """Returns wether or not this bot is currently connected to the server."""
         return self._connected.is_set()
 
     @property
     def closed(self):
+        """Returns wether or not this bot is closed."""
         return self._closed.is_set()
 
     async def wait_until_connected(self):
+        """Pause the execution of the calling coroutine until the bot is connected."""
         await self._connected.wait()
 
     async def wait_until_closed(self):
+        """Paused the execution of the calling coroutine until the bot has closed."""
         await self._closed.wait()
 
     async def close(self):
+        """Close the bot, never to be started again."""
         if self.closed:
             return
 
@@ -259,12 +271,15 @@ class EuphoriaBot:
         logger.debug("{0} closed".format(self))
 
     async def stream(self):
+        """Wait until the bot is connected, then return a stream that gets a
+         full view of all the received messages that aren't replies."""
         await self.wait_until_connected()
         stream = EuphoriaStream(loop=self._loop)
         self._streams.add(stream)
         return stream
 
     async def start(self):
+        """Start the bot. This won't return until the bot is closed."""
         assert self._sock == None
         assert self._sender == None
         assert self._receiver == None
@@ -340,16 +355,23 @@ class EuphoriaBot:
         await self._outgoing.put(j)
 
     async def send_nick(self, name):
+        """Sends a nick command to the server. Returns a future that will
+         contain a nick-reply."""
         return await self._send_msg_with_reply_type("nick", {"name": name})
 
     async def send_ping_reply(self, time):
+        """Sends a ping reply to the server."""
         await self._send_msg_no_reply("ping-reply", {"time": time})
 
     async def send_auth(self, passcode):
+        """Sends an auth command to the server. Returns a future that will
+         contain an auth-reply."""
         return await self._send_msg_with_reply_type("auth",
                                                     {"type": "passcode", "passcode": passcode})
 
     async def send(self, content, parent=None):
+        """Sends a send command to the server. Returns a future that will
+         contain a send-reply."""
         return await self._send_msg_with_reply_type("send", {"content": content})
 
 
@@ -365,15 +387,18 @@ class EuphoriaStream:
         self._queue.put_nowait(packet)
 
     def close(self):
+        """Closes this stream. It won't receive any more messages from the bot."""
         self._bot_open = False
         if self._waiting_on:
             self._waiting_on.cancel()
 
     @property
     def open(self):
+        """Returns wether or not this stream could receive messages from the bot."""
         return self._bot_open
 
     async def any(self):
+        """Returns the next message from the bot."""
         assert self._waiting_on is None
         self._waiting_on = asyncio.ensure_future(self._queue.get())
         result = await self._waiting_on
@@ -381,6 +406,7 @@ class EuphoriaStream:
         return result
 
     async def skip_until(self, condition):
+        """Discards messages in this stream until one matches the given condition."""
         if inspect.isclass(condition):
             kls = condition
             condition = lambda p: p.data and isinstance(p.data, kls)
@@ -392,6 +418,8 @@ class EuphoriaStream:
             return packet
 
     async def select(self, condition):
+        """Finds a message in this stream matching the given condition, without
+         discarding the rest of them."""
         if inspect.isclass(condition):
             kls = condition
             condition = lambda p: p.data and isinstance(p.data, kls)

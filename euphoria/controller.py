@@ -17,6 +17,10 @@
 import asyncio
 from euphoria import PingEvent, HelloEvent, NickReply, BounceEvent
 
+#
+# This file is very.... experimental. I really have no idea how this is going
+# to take form.
+#
 
 class PingController:
 
