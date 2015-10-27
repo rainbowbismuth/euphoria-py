@@ -1,3 +1,5 @@
+# TODO: add docstring
+
 # euphoria-py
 # Copyright (C) 2015  Emily A. Bellows
 #
@@ -22,7 +24,9 @@ from euphoria import PingEvent, HelloEvent, NickReply, BounceEvent
 # to take form.
 #
 
+
 class PingController:
+    # TODO: add docstring
 
     def __init__(self, bot):
         self._bot = bot
@@ -30,9 +34,11 @@ class PingController:
 
     @property
     def bot(self):
+        # TODO: add docstring
         return self._bot
 
     async def start(self):
+        # TODO: add docstring
         stream = await self._bot.stream()
         while True:
             ping = await stream.skip_until(PingEvent)
@@ -40,7 +46,7 @@ class PingController:
 
 
 class NickAndAuthController:
-
+    # TODO: add docstring
     def __init__(self, bot, desired_nick, passcode=None):
         self._bot = bot
         self._loop = bot.loop
@@ -51,18 +57,22 @@ class NickAndAuthController:
 
     @property
     def bot(self):
+        # TODO: add docstring
         return self._bot
 
     @property
     def desired_nick(self):
+        # TODO: add docstring
         return self._desired_nick
 
     @property
     def current_nick(self):
+        # TODO: add docstring
         return self._current_nick
 
     @property
     def authenticated(self):
+        # TODO: add docstring
         return self._authenticated
 
     async def start(self):
@@ -78,7 +88,8 @@ class NickAndAuthController:
                 assert self._passcode
                 auth_reply_fut = await self._bot.send_auth(self._passcode)
                 auth_reply = await auth_reply_fut
-                if not auth_reply.error and self._current_nick != self._desired_nick:
+                if not auth_reply.error and \
+                        self._current_nick != self._desired_nick:
                     await self._try_send_nick()
 
     async def _try_send_nick(self):

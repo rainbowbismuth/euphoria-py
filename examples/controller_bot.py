@@ -47,7 +47,8 @@ async def main_task():
     send_start = asyncio.ensure_future(send_event_loop())
 
     task_list = [bot_start, ping_start, nick_and_auth_start, send_start]
-    (_, pending) = await asyncio.wait(task_list, return_when=asyncio.FIRST_COMPLETED)
+    (_, pending) = await asyncio.wait(task_list,
+                                      return_when=asyncio.FIRST_COMPLETED)
     for task in pending:
         task.cancel()
 
