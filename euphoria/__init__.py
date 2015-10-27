@@ -1,3 +1,5 @@
+# TODO: Add docstring
+
 # euphoria-py
 # Copyright (C) 2015  Emily A. Bellows
 #
@@ -24,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class Packet:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.id = j.get('id', None)
@@ -37,14 +40,14 @@ class Packet:
         self.throttled_reason = j.get('throttled_reason', None)
 
     def is_type(self, type_):
-        """Returns whether or not this packet contains data of the given type."""
+        """Returns whether or this packet contains data of the given type."""
         return self.data and isinstance(self.data, type_)
 
     @property
     def data(self):
         """Returns the data part of the Packet.
 
-        Throws an exception if the Packet contains an error message or a throttle request."""
+        Throws an exception if Packet contains an error or throttle message."""
         if self.error:
             raise Exception(self.error)
         if self.throttled:
@@ -53,6 +56,7 @@ class Packet:
 
 
 class HelloEvent:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.id = j['id']
@@ -64,6 +68,7 @@ class HelloEvent:
 
 
 class PingEvent:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.time = j['time']
@@ -71,18 +76,21 @@ class PingEvent:
 
 
 class BounceEvent:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.reason = j['reason']
 
 
 class AuthReply:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.success = j['success']
 
 
 class SnapshotEvent:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.identity = j['identity']
@@ -93,6 +101,7 @@ class SnapshotEvent:
 
 
 class NickEvent:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.session_id = j['session_id']
@@ -102,6 +111,7 @@ class NickEvent:
 
 
 class NickReply:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.session_id = j['session_id']
@@ -111,6 +121,7 @@ class NickReply:
 
 
 class Message:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.id = j['id']
@@ -126,6 +137,7 @@ class Message:
 
 
 class SendEvent:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.id = j['id']
@@ -141,6 +153,7 @@ class SendEvent:
 
 
 class SendReply:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.id = j['id']
@@ -156,6 +169,7 @@ class SendReply:
 
 
 class SessionView:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.id = j['id']
@@ -168,6 +182,7 @@ class SessionView:
 
 
 class JoinEvent:
+    # TODO: Add docstring
 
     def __init__(self, j):
         self.id = j['id']
@@ -190,9 +205,13 @@ DATA_TYPES = {'hello-event': HelloEvent,
               'join-event': JoinEvent}
 
 
-class EuphoriaBot:
+EUPHORIA_URL = "wss://euphoria.io:443/room/{0}/ws"
 
-    def __init__(self, room, uri_format="wss://euphoria.io:443/room/{0}/ws", loop=None):
+
+class EuphoriaBot:
+    # TODO: Add docstring
+
+    def __init__(self, room, uri_format=EUPHORIA_URL, loop=None):
         self._incoming = asyncio.Queue(loop=loop)
         self._outgoing = asyncio.Queue(loop=loop)
         self._next_msg_id = 0xBEEF  # just for fun
@@ -225,20 +244,20 @@ class EuphoriaBot:
 
     @property
     def connected(self):
-        """Returns wether or not this bot is currently connected to the server."""
+        """Returns whether this bot is connected to the server."""
         return self._connected.is_set()
 
     @property
     def closed(self):
-        """Returns wether or not this bot is closed."""
+        """Returns whether this bot is closed."""
         return self._closed.is_set()
 
     async def wait_until_connected(self):
-        """Pause the execution of the calling coroutine until the bot is connected."""
+        """Pause execution of calling coroutine until bot is connected."""
         await self._connected.wait()
 
     async def wait_until_closed(self):
-        """Paused the execution of the calling coroutine until the bot has closed."""
+        """Paused execution of the calling coroutine until bot has closed."""
         await self._closed.wait()
 
     async def close(self):
@@ -280,9 +299,9 @@ class EuphoriaBot:
 
     async def start(self):
         """Start the bot. This won't return until the bot is closed."""
-        assert self._sock == None
-        assert self._sender == None
-        assert self._receiver == None
+        assert self._sock is None
+        assert self._sender is None
+        assert self._receiver is None
 
         logger.info("{0} connecting to {1}".format(self, self._uri))
         self._sock = await websockets.connect(self._uri)
@@ -299,7 +318,8 @@ class EuphoriaBot:
     async def _wait_then_close(self):
         try:
             await asyncio.wait([self._sender, self._receiver],
-                               return_when=asyncio.FIRST_COMPLETED, loop=self._loop)
+                               return_when=asyncio.FIRST_COMPLETED,
+                               loop=self._loop)
         finally:
             await self.close()
 
@@ -312,11 +332,11 @@ class EuphoriaBot:
     async def _recv_loop(self):
         while self.connected:
             msg = await self._sock.recv()
-            if msg == None:
+            if msg is None:
                 return
             logger.debug("{0} got message {1}".format(self, msg))
             packet = Packet(json.loads(msg))
-            if packet.id != None:
+            if packet.id is not None:
                 fut = self._take_reply_future(packet.id)
                 if fut:
                     fut.set_result(packet)
@@ -367,15 +387,18 @@ class EuphoriaBot:
         """Sends an auth command to the server. Returns a future that will
          contain an auth-reply."""
         return await self._send_msg_with_reply_type("auth",
-                                                    {"type": "passcode", "passcode": passcode})
+                                                    {"type": "passcode",
+                                                     "passcode": passcode})
 
     async def send(self, content, parent=None):
         """Sends a send command to the server. Returns a future that will
          contain a send-reply."""
-        return await self._send_msg_with_reply_type("send", {"content": content})
+        return await self._send_msg_with_reply_type("send",
+                                                    {"content": content})
 
 
 class EuphoriaStream:
+    # TODO: Add docstring
 
     def __init__(self, loop=None):
         self._loop = loop
@@ -387,14 +410,14 @@ class EuphoriaStream:
         self._queue.put_nowait(packet)
 
     def close(self):
-        """Closes this stream. It won't receive any more messages from the bot."""
+        """Closes this stream. Will not receive any more messages from bot."""
         self._bot_open = False
         if self._waiting_on:
             self._waiting_on.cancel()
 
     @property
     def open(self):
-        """Returns wether or not this stream could receive messages from the bot."""
+        """Returns whether this stream can receive messages from the bot."""
         return self._bot_open
 
     async def any(self):
@@ -406,9 +429,10 @@ class EuphoriaStream:
         return result
 
     async def skip_until(self, condition):
-        """Discards messages in this stream until one matches the given condition."""
+        """Discards messages in this stream until one matches condition."""
         if inspect.isclass(condition):
             kls = condition
+            # TODO: change this to a def instead of a lambda
             condition = lambda p: p.data and isinstance(p.data, kls)
 
         while True:
@@ -422,6 +446,7 @@ class EuphoriaStream:
          discarding the rest of them."""
         if inspect.isclass(condition):
             kls = condition
+            # TODO: change this to a def instead of a lambda
             condition = lambda p: p.data and isinstance(p.data, kls)
 
         while True:
