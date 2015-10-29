@@ -295,6 +295,7 @@ class Client:
         """Sends a send command to the server.
 
         :param str content: The message you want this Client to say to the room
+        :param str parent: The message ID you want to parent to
         :returns: A future that will contain a :py:class:`euphoria.SendReply`
         :rtype: asyncio.Future"""
         assert self.connected
