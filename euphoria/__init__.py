@@ -25,4 +25,5 @@ __all__ = ['Client', 'Stream', 'EuphoriaException', 'ErrorResponse',
            'StreamEmpty', 'Packet', 'HelloEvent',
            'PingEvent', 'BounceEvent', 'AuthReply', 'SnapshotEvent',
            'NickEvent', 'NickReply', 'Message', 'SendEvent', 'SendReply',
-           'SessionView', 'JoinEvent']
+           'SessionView', 'JoinEvent', 'PartEvent', 'NetworkEvent',
+           'EditMessageEvent']

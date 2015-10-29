@@ -156,6 +156,7 @@ class MessageBased:
 
     def __init__(self, j: dict):
         self._id = j['id']
+        self._edit_id = j.get('edit_id', None)
         self._parent = j.get('parent', None)
         self._previous_edit_id = j.get('previous_edit_id', None)
         self._time = j['time']
@@ -172,6 +173,12 @@ class MessageBased:
 
         :rtype: str"""
         return self._id
+
+    @property
+    def edit_id(self) -> str:
+        """The ID of the edit. None if this isn't an EditMessageEvent.
+
+        :rtype: str"""
 
     @property
     def parent(self) -> str:
@@ -423,6 +430,33 @@ class SnapshotEvent:
         return self._log
 
 
+class NetworkEvent:
+    def __init__(self, j: dict):
+        self._type = j['type']
+        self._server_id = j['server_id']
+        self._server_era = j['server_era']
+
+    @property
+    def type(self) -> str:
+        """The type of network event; for now, always 'partition'.
+
+        :rtype: str"""
+        return self._type
+
+    @property
+    def server_id(self) -> str:
+        """The id of the affected server.
+
+        :rtype: str"""
+        return self._server_id
+
+    @property
+    def server_era(self) -> str:
+        """The era of the affected server.
+
+        :rtype: str"""
+        return self._server_era
+
 class NickBased:
 
     def __init__(self, j: dict):
@@ -459,7 +493,6 @@ class NickBased:
         :rtype: str"""
         return self._to
 
-
 class NickEvent(NickBased):
     """A NickEvent indicates that a session successfully changed their nick."""
     pass
@@ -469,10 +502,12 @@ class NickReply(NickBased):
     """A NickReply indicates that you successfully changed your nick."""
     pass
 
-
 class SendEvent(MessageBased):
     """A SendEvent indicates a message received by the room from another session."""
     pass
+
+class EditMessageEvent(MessageBased):
+    """An EditMessageEvent indicates that a message in the room has been modified or deleted."""
 
 
 class SendReply(MessageBased):
@@ -482,13 +517,19 @@ class SendReply(MessageBased):
 class JoinEvent(SessionViewBased):
     """A JoinEvent indicates a session just joined the room."""
 
+class PartEvent(SessionViewBased):
+    """A PartEvent indicates a session just disconnected from the room."""
+
 DATA_TYPES = {'hello-event': HelloEvent,
               'snapshot-event': SnapshotEvent,
               'ping-event': PingEvent,
               'bounce-event': BounceEvent,
               'auth-reply': AuthReply,
+              'network-event': NetworkEvent,
               'nick-event': NickEvent,
               'nick-reply': NickReply,
               'send-event': SendEvent,
+              'edit-message-event': EditMessageEvent,
               'send-reply': SendReply,
-              'join-event': JoinEvent}
+              'join-event': JoinEvent,
+              'part-event': PartEvent}
