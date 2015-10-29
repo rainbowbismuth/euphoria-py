@@ -1,3 +1,5 @@
+# TODO: Add docstring
+
 # euphoria-py
 # Copyright (C) 2015  Emily A. Bellows
 #
@@ -15,13 +17,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class EuphoriaException(Exception):
+    # TODO: Add docstring
     pass
 
 class ErrorResponse(EuphoriaException):
+    # TODO: Add docstring
     pass
 
 class ThrottledResponse(EuphoriaException):
+    # TODO: Add docstring
     pass
 
 class StreamEmpty(EuphoriaException):
+    # TODO: Add docstring
     pass
