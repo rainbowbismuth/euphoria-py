@@ -16,52 +16,35 @@
 
 import asyncio
 import euphoria
+from euphoria.state_machines import NickAndAuth
 import logging
 
 logging.basicConfig(level=logging.INFO)
 
 loop = asyncio.get_event_loop()
+
 room = input("room name> ")
 passcode = input("passcode> ")
-bot = euphoria.Client(room, loop=loop)
 
-async def main_task():
-    asyncio.ensure_future(bot.start(), loop=loop)
-    stream = await bot.stream()
-    hello = await stream.skip_until(euphoria.HelloEvent)
-    logging.info("We're connected, hello-event received!")
+client = euphoria.Client(room, loop=loop)
 
-    try:
-        await authenticate()
-    except asyncio.CancelledError:
-        logging.info("We're done here")
-
-async def authenticate():
-    auth_reply = await bot.send_auth(passcode)
-    if not auth_reply.data.success:
-        logging.error("Failed to authenticate")
-        bot.close()
-        return
-
-    logging.info("Authenticated")
-
-    nick_reply = await bot.send_nick("simple_bot")
-    if nick_reply.error:
-        logging.error("Failed to set nick: {0}".format(nick_reply.error))
-        bot.close()
-        return
-
-    logging.info("Nick set")
-    await send_event_loop()
+nick_and_auth = NickAndAuth(client, "nick_and_auth_client")
+nick_and_auth.passcode = passcode
 
 async def send_event_loop():
-    stream = await bot.stream()
+    stream = await client.stream()
     while True:
+        await nick_and_auth.wait_for_auth()
+
         send_event = await stream.skip_until(euphoria.SendEvent)
-        logging.info("{0}: {1}".format(
-            send_event.data.sender.name, send_event.data.content))
+        logging.info("%s: %s", send_event.data.sender.name,
+                     send_event.data.content)
+
         if send_event.data.content == "!quit":
-            bot.close()
+            await client.send("goodbye!", parent=send_event.data.id)
+            client.close()
             return
 
-loop.run_until_complete(main_task())
+loop.create_task(nick_and_auth.start())
+loop.create_task(send_event_loop())
+loop.run_until_complete(client.start())

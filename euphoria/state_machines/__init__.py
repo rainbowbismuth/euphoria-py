@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # euphoria-py
 # Copyright (C) 2015  Emily A. Bellows
 #
@@ -16,13 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from distutils.core import setup
+from .nick_and_auth import *
 
-setup(name='euphoria-py',
-      version='0.2',
-      description='An asyncio based euphoria.io bot library for Python 3.5',
-      author='Emily A. Bellows',
-      author_email='emily.a.bellows@gmail.com',
-      url='https://github.com/rainbowbismuth/euphoria-py',
-      packages=['euphoria'],
-     )
+__ALL__ = ['NickAndAuth']

@@ -1,4 +1,4 @@
-# euphoria-py
+# euphoria-py v0.2
 
 An asyncio based euphoria.io bot library for Python 3.5.
 

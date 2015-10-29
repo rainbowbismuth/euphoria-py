@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 EUPHORIA_URL = "wss://euphoria.io:443/room/{0}/ws"
 
+
 class Client:
     """A websocket client for Euphoria.
 
@@ -37,7 +38,9 @@ class Client:
     :param asyncio.BaseEventLoop loop: The asyncio event loop you want to use
     """
 
-    def __init__(self, room: str, uri_format: str=EUPHORIA_URL, loop: BaseEventLoop=None):
+    def __init__(self, room: str, uri_format: str=EUPHORIA_URL,
+                 handle_pings: bool=True, loop: BaseEventLoop=None):
+        self._handle_pings = handle_pings
         self._incoming = asyncio.Queue(loop=loop)
         self._outgoing = asyncio.Queue(loop=loop)
         self._next_msg_id = 0xBEEF  # just for fun
@@ -203,6 +206,11 @@ class Client:
                 return
             logger.debug("%s got message %s", self, msg)
             packet = Packet(json.loads(msg))
+
+            if packet.is_type(PingEvent) and self._handle_pings:
+                self.send_ping_reply(packet.data.time)
+                continue
+
             if packet.id is not None:
                 # If the message has an ID that means its a response to a
                 # message we sent, so we put it into the corresponding future.
@@ -211,7 +219,6 @@ class Client:
                     fut.set_result(packet)
                 continue
 
-            assert packet.data is not None
             to_delete = []
             for stream in self._streams:
                 # Every stream should get a copy of this Packet.
@@ -288,5 +295,7 @@ class Client:
         :param str content: The message you want this Client to say to the room
         :rtype: asyncio.Future"""
         assert self.connected
-        return self._send_msg_with_reply_type("send",
-                                              {"content": content})
+        d = {"content": content}
+        if parent:
+            d["parent"] = parent
+        return self._send_msg_with_reply_type("send", d)

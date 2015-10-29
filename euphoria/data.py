@@ -38,7 +38,7 @@ class Packet:
         """Returns whether or not this packet contains data of the given type.
 
         :rtype: bool"""
-        return self.data and isinstance(self.data, type_)
+        return isinstance(self._data, type_)
 
     @property
     def id(self) -> str:
@@ -347,6 +347,8 @@ class BounceEvent:
         """A list of authentication options that may be used. Potentially None.
 
         :rtype: list"""
+        if not self._auth_options:
+            return ["passcode"]
         return self._auth_options
 
 
