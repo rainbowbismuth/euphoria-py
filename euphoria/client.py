@@ -211,6 +211,7 @@ class Client:
 
             if packet.is_type(PingEvent) and self._handle_pings:
                 self.send_ping_reply(packet.data.time)
+                logger.debug("%s ping: %s", self, packet.data.time)
                 continue
 
             if packet.id is not None:
