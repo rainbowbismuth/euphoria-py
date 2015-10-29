@@ -17,9 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
+from asyncio import BaseEventLoop, Future
 import websockets
 import json
 import logging
+from typing import Tuple
 from .exceptions import *
 from .data import *
 from .stream import *
@@ -30,9 +32,9 @@ EUPHORIA_URL = "wss://euphoria.io:443/room/{0}/ws"
 
 
 class Client:
-    # TODO: Add docstring
+    """A websocket client for Euphoria."""
 
-    def __init__(self, room, uri_format=EUPHORIA_URL, loop=None):
+    def __init__(self, room: str, uri_format: str=EUPHORIA_URL, loop: BaseEventLoop=None):
         self._incoming = asyncio.Queue(loop=loop)
         self._outgoing = asyncio.Queue(loop=loop)
         self._next_msg_id = 0xBEEF  # just for fun
@@ -50,49 +52,49 @@ class Client:
         self._closed = asyncio.Event(loop=loop)
 
     @property
-    def room(self):
+    def room(self) -> str:
         """The room this client may be connected to."""
         return self._room
 
     @property
-    def uri(self):
+    def uri(self) -> str:
         """The URI this client will connect to."""
         return self._uri
 
     @property
-    def loop(self):
+    def loop(self) -> BaseEventLoop:
         """The asyncio event loop this client uses."""
         return self._loop
 
     @property
-    def started(self):
+    def started(self) -> bool:
         """Returns whether this client has been started."""
         return self._started.is_set()
 
     @property
-    def connected(self):
+    def connected(self) -> bool:
         """Returns whether this client is connected to the server."""
         return self._connected.is_set()
 
     @property
-    def closed(self):
+    def closed(self) -> bool:
         """Returns whether this client is closed."""
         return self._closed.is_set()
 
-    async def wait_until_started(self):
+    async def wait_until_started(self) -> None:
         """Pause execution of the calling coroutine until the client has been started."""
         await self._started.wait()
 
-    async def wait_until_connected(self):
+    async def wait_until_connected(self) -> None:
         """Pause execution of calling coroutine until client is connected."""
         assert not self.closed
         await self._connected.wait()
 
-    async def wait_until_closed(self):
+    async def wait_until_closed(self) -> None:
         """Paused execution of the calling coroutine until client has closed."""
         await self._closed.wait()
 
-    def close(self):
+    def close(self) -> None:
         """Close the Client, never to be started again."""
         if self.closed:
             return
@@ -126,7 +128,7 @@ class Client:
 
         asyncio.ensure_future(close_task(), loop=self._loop)
 
-    async def stream(self):
+    async def stream(self) -> Stream:
         """Wait until the Client is connected, then return a stream that gets a
          full view of all the received messages that aren't replies."""
         assert not self.closed
@@ -135,7 +137,7 @@ class Client:
         self._streams.add(stream)
         return stream
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the Client. This won't return until the Client is closed."""
         assert not self.started
         self._started.set()
@@ -157,7 +159,7 @@ class Client:
         finally:
             self.close()
 
-    async def _send_loop(self):
+    async def _send_loop(self) -> None:
         # This loop is started as a Task in Client.start(), it retrieves data from
         # the internal send queue and sends it out on the WebSocket.
         while self.connected:
@@ -165,7 +167,7 @@ class Client:
             logger.debug("%s sending message %s", self, msg)
             await self._sock.send(msg)
 
-    async def _recv_loop(self):
+    async def _recv_loop(self) -> None:
         # This loop is started as a Task in Client.start(), it gets packets from
         # the WebSocket and routes them to the appropriate place.
         while self.connected:
@@ -195,7 +197,7 @@ class Client:
             for stream in to_delete:
                 self._streams.remove(stream)
 
-    def _next_id_and_future(self):
+    def _next_id_and_future(self) -> Tuple[str, Future]:
         # Generate a new ID to put into a message we are about to send, and
         # a corresponding future to recieve the eventual reply from the server.
         id_ = str(self._next_msg_id)
@@ -203,7 +205,7 @@ class Client:
         self._reply_map[id_] = future
         return (id_, future)
 
-    def _take_reply_future(self, id_):
+    def _take_reply_future(self, id_: str) -> Future:
         # If there is a future for this ID, then we retrieve it and remove it
         # from the map. (There will only be one response per ID.)
         if id_ in self._reply_map:
@@ -211,7 +213,7 @@ class Client:
             del self._reply_map[id_]
             return future
 
-    def _send_msg_with_reply_type(self, type_, data):
+    def _send_msg_with_reply_type(self, type_: str, data: dict) -> Future:
         # A small helper to send messages that will be replied to by the
         # server.
         id_, future = self._next_id_and_future()
@@ -219,24 +221,24 @@ class Client:
         self._outgoing.put_nowait(j)
         return future
 
-    def _send_msg_no_reply(self, type_, data):
+    def _send_msg_no_reply(self, type_: str, data: dict) -> None:
         # A small helper to send a message that won't receive a reply from the
         # server.
         j = json.dumps({"type": type_, "data": data})
         self._outgoing.put_nowait(j)
 
-    def send_nick(self, name):
+    def send_nick(self, name: str) -> Future:
         """Sends a nick command to the server. Returns a future that will
          contain a nick-reply."""
         assert self.connected
         return self._send_msg_with_reply_type("nick", {"name": name})
 
-    def send_ping_reply(self, time):
+    def send_ping_reply(self, time: int) -> None:
         """Sends a ping reply to the server."""
         assert self.connected
         self._send_msg_no_reply("ping-reply", {"time": time})
 
-    def send_auth(self, passcode):
+    def send_auth(self, passcode: str) -> Future:
         """Sends an auth command to the server. Returns a future that will
          contain an auth-reply."""
         assert self.connected
@@ -244,7 +246,7 @@ class Client:
                                               {"type": "passcode",
                                                "passcode": passcode})
 
-    def send(self, content, parent=None):
+    def send(self, content: str, parent: str=None) -> Future:
         """Sends a send command to the server. Returns a future that will
          contain a send-reply."""
         assert self.connected

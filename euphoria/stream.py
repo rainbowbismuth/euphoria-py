@@ -17,24 +17,25 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
+from asyncio import BaseEventLoop
 import inspect
 from .exceptions import *
-
+from .data import Packet
 
 class Stream:
     # TODO: Add docstring
 
-    def __init__(self, loop=None):
+    def __init__(self, loop: BaseEventLoop=None):
         self._loop = loop
         self._client_open = True
         self._queue = asyncio.Queue(loop=loop)
         self._waiting_on = None
 
-    def _send(self, packet):
+    def _send(self, packet: Packet) -> None:
         # This is used by Client's receive loop to put an item into the Stream.
         self._queue.put_nowait(packet)
 
-    def close(self):
+    def close(self) -> None:
         """Closes this stream. Will not receive any more messages from the Client."""
         self._client_open = False
         if self._waiting_on:
@@ -43,20 +44,20 @@ class Stream:
             self._waiting_on.cancel()
 
     @property
-    def loop(self):
+    def loop(self) -> BaseEventLoop:
         """The asyncio event loop this Stream uses."""
         return self._loop
 
     @property
-    def open(self):
+    def open(self) -> bool:
         """Returns whether this stream can receive messages from the Client."""
         return self._client_open
 
-    def empty(self):
+    def empty(self) -> bool:
         """Returns whether or not the Stream is currently empty."""
         return self._queue.empty()
 
-    async def any(self):
+    async def any(self) -> Packet:
         """Returns the next message from the Client."""
         # Only one coroutine should be using a stream, so if self._waiting_on
         # isn't None, then clearly more then one coroutine is using it.
@@ -73,7 +74,7 @@ class Stream:
         finally:
             self._waiting_on = None
 
-    async def skip_until(self, condition):
+    async def skip_until(self, condition) -> Packet:
         """Discards messages in this stream until one matches condition."""
         if inspect.isclass(condition):
             kls = condition
@@ -86,7 +87,7 @@ class Stream:
                 continue
             return packet
 
-    async def select(self, condition):
+    async def select(self, condition) -> Packet:
         """Finds a message in this stream matching the given condition, without
          discarding the rest of them."""
         if inspect.isclass(condition):

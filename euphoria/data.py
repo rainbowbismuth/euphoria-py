@@ -22,7 +22,7 @@ from .exceptions import *
 class Packet:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.id = j.get('id', None)
         self.type = j['type']
         if j.get('data', None):
@@ -33,7 +33,7 @@ class Packet:
         self.throttled = j.get('throttled', False)
         self.throttled_reason = j.get('throttled_reason', None)
 
-    def is_type(self, type_):
+    def is_type(self, type_: str):
         """Returns whether or not this packet contains data of the given type."""
         return self.data and isinstance(self.data, type_)
 
@@ -52,7 +52,7 @@ class Packet:
 class HelloEvent:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.id = j['id']
         self.account = j.get('account', None)
         self.session = SessionView(j['session'])
@@ -64,7 +64,7 @@ class HelloEvent:
 class PingEvent:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.time = j['time']
         self.next = j['next']
 
@@ -72,21 +72,21 @@ class PingEvent:
 class BounceEvent:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.reason = j['reason']
 
 
 class AuthReply:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.success = j['success']
 
 
 class SnapshotEvent:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.identity = j['identity']
         self.session_id = j['session_id']
         self.version = j['version']
@@ -97,7 +97,7 @@ class SnapshotEvent:
 class NickEvent:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.session_id = j['session_id']
         self.id = j['id']
         self.from_ = j['from']
@@ -107,7 +107,7 @@ class NickEvent:
 class NickReply:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.session_id = j['session_id']
         self.id = j['id']
         self.from_ = j['from']
@@ -117,7 +117,7 @@ class NickReply:
 class Message:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.id = j['id']
         self.parent = j.get('parent', None)
         self.previous_edit_id = j.get('previous_edit_id', None)
@@ -133,7 +133,7 @@ class Message:
 class SendEvent:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.id = j['id']
         self.parent = j.get('parent', None)
         self.previous_edit_id = j.get('previous_edit_id', None)
@@ -149,7 +149,7 @@ class SendEvent:
 class SendReply:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.id = j['id']
         self.parent = j.get('parent', None)
         self.previous_edit_id = j.get('previous_edit_id', None)
@@ -165,7 +165,7 @@ class SendReply:
 class SessionView:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.id = j['id']
         self.name = j['name']
         self.server_id = j['server_id']
@@ -178,7 +178,7 @@ class SessionView:
 class JoinEvent:
     # TODO: Add docstring
 
-    def __init__(self, j):
+    def __init__(self, j: dict):
         self.id = j['id']
         self.name = j['name']
         self.server_id = j['server_id']
