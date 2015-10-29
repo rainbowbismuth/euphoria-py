@@ -3,12 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-euphoria
-========
+Table of Contents
+=================
 
-.. automodule:: euphoria
-   :members:
-   :inherited-members:
+.. toctree::
+   :maxdepth: 2
+
+   euphoria
+   euphoria.state_machines
+   euphoria.test
 
 Indices and tables
 ==================
