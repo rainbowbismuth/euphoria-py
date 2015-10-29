@@ -233,9 +233,9 @@ class Client:
                                               {"type": "passcode",
                                                "passcode": passcode})
 
-    async def send(self, content, parent=None):
+    def send(self, content, parent=None):
         """Sends a send command to the server. Returns a future that will
          contain a send-reply."""
         assert self.connected
-        return await self._send_msg_with_reply_type("send",
+        return self._send_msg_with_reply_type("send",
                                                     {"content": content})
