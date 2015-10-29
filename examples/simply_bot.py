@@ -36,13 +36,12 @@ async def main_task():
     try:
         while True:
             ping = await stream.skip_until(euphoria.PingEvent)
-            await bot.send_ping_reply(ping.data.time)
+            bot.send_ping_reply(ping.data.time)
     except asyncio.CancelledError:
         logging.info("We're done here")
 
 async def authenticate():
-    auth_reply_future = await bot.send_auth(passcode)
-    auth_reply = await auth_reply_future
+    auth_reply = await bot.send_auth(passcode)
     if not auth_reply.data.success:
         logging.error("Failed to authenticate")
         bot.close()
@@ -50,8 +49,7 @@ async def authenticate():
 
     logging.info("Authenticated")
 
-    nick_reply_future = await bot.send_nick("simple_bot")
-    nick_reply = await nick_reply_future
+    nick_reply = await bot.send_nick("simple_bot")
     if nick_reply.error:
         logging.error("Failed to set nick: {0}".format(nick_reply.error))
         bot.close()
@@ -67,7 +65,7 @@ async def send_event_loop():
         logging.info("{0}: {1}".format(
             send_event.data.sender.name, send_event.data.content))
         if send_event.data.content == "!quit":
-            await bot.close()
+            bot.close()
             return
 
 loop.run_until_complete(main_task())

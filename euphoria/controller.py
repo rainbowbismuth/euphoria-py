@@ -42,7 +42,7 @@ class PingController:
         stream = await self._bot.stream()
         while True:
             ping = await stream.skip_until(PingEvent)
-            await self._bot.send_ping_reply(ping.data.time)
+            self._bot.send_ping_reply(ping.data.time)
 
 
 class NickAndAuthController:
@@ -87,15 +87,13 @@ class NickAndAuthController:
 
             elif packet.is_type(BounceEvent):
                 assert self._passcode
-                auth_reply_fut = await self._bot.send_auth(self._passcode)
-                auth_reply = await auth_reply_fut
+                auth_reply = await self._bot.send_auth(self._passcode)
                 if not auth_reply.error and \
                         self._current_nick != self._desired_nick:
                     await self._try_send_nick()
 
     async def _try_send_nick(self):
-        nick_reply_fut = await self._bot.send_nick(self._desired_nick)
-        nick_reply = await nick_reply_fut
+        nick_reply = await self._bot.send_nick(self._desired_nick)
         if nick_reply.error:
             return
         self._current_nick = nick_reply.data.to

@@ -81,7 +81,7 @@ class Client:
         """Paused execution of the calling coroutine until client has closed."""
         await self._closed.wait()
 
-    async def close(self):
+    def close(self):
         """Close the Client, never to be started again."""
         if self.closed:
             return
@@ -91,26 +91,29 @@ class Client:
         self._connected.clear()
         self._closed.set()
 
-        if self._sender:
-            self._sender.cancel()
-            self._sender = None
+        async def close_task():
+            if self._sock and self._sock.open:
+                await self._sock.close()
 
-        if self._receiver:
-            self._receiver.cancel()
-            self._receiver = None
+            if self._sender:
+                self._sender.cancel()
+                self._sender = None
 
-        for v in self._reply_map.values():
-            v.cancel()
-        self._reply_map = {}
+            if self._receiver:
+                self._receiver.cancel()
+                self._receiver = None
 
-        for stream in self._streams:
-            stream.close()
-        self._streams = set()
+            for v in self._reply_map.values():
+                v.cancel()
+            self._reply_map = {}
 
-        if self._sock and self._sock.open:
-            await self._sock.close()
+            for stream in self._streams:
+                stream.close()
+            self._streams = set()
 
-        logger.debug("%s closed", self)
+            logger.debug("%s closed", self)
+
+        asyncio.ensure_future(close_task(), loop=self._loop)
 
     async def stream(self):
         """Wait until the Client is connected, then return a stream that gets a
@@ -135,15 +138,12 @@ class Client:
         self._connected.set()
         logger.info("%s connected", self)
 
-        await self._wait_then_close()
-
-    async def _wait_then_close(self):
         try:
             await asyncio.wait([self._sender, self._receiver],
                                return_when=asyncio.FIRST_COMPLETED,
                                loop=self._loop)
         finally:
-            await self.close()
+            self.close()
 
     async def _send_loop(self):
         # This loop is started as a Task in Client.start(), it retrieves data from
@@ -199,38 +199,38 @@ class Client:
             del self._reply_map[id_]
             return future
 
-    async def _send_msg_with_reply_type(self, type_, data):
+    def _send_msg_with_reply_type(self, type_, data):
         # A small helper to send messages that will be replied to by the
         # server.
         id_, future = self._next_id_and_future()
         j = json.dumps({"type": type_, "id": id_, "data": data})
-        await self._outgoing.put(j)
+        self._outgoing.put_nowait(j)
         return future
 
-    async def _send_msg_no_reply(self, type_, data):
+    def _send_msg_no_reply(self, type_, data):
         # A small helper to send a message that won't receive a reply from the
         # server.
         j = json.dumps({"type": type_, "data": data})
-        await self._outgoing.put(j)
+        self._outgoing.put_nowait(j)
 
-    async def send_nick(self, name):
+    def send_nick(self, name):
         """Sends a nick command to the server. Returns a future that will
          contain a nick-reply."""
         assert self.connected
-        return await self._send_msg_with_reply_type("nick", {"name": name})
+        return self._send_msg_with_reply_type("nick", {"name": name})
 
-    async def send_ping_reply(self, time):
+    def send_ping_reply(self, time):
         """Sends a ping reply to the server."""
         assert self.connected
-        await self._send_msg_no_reply("ping-reply", {"time": time})
+        self._send_msg_no_reply("ping-reply", {"time": time})
 
-    async def send_auth(self, passcode):
+    def send_auth(self, passcode):
         """Sends an auth command to the server. Returns a future that will
          contain an auth-reply."""
         assert self.connected
-        return await self._send_msg_with_reply_type("auth",
-                                                    {"type": "passcode",
-                                                     "passcode": passcode})
+        return self._send_msg_with_reply_type("auth",
+                                              {"type": "passcode",
+                                               "passcode": passcode})
 
     async def send(self, content, parent=None):
         """Sends a send command to the server. Returns a future that will
