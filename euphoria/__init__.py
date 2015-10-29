@@ -21,194 +21,14 @@ import websockets
 import json
 import inspect
 import logging
+from .data import *
 
 logger = logging.getLogger(__name__)
-
-
-class Packet:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.id = j.get('id', None)
-        self.type = j['type']
-        if j.get('data', None):
-            self._data = DATA_TYPES[self.type](j['data'])
-        else:
-            self._data = None
-        self.error = j.get('error', None)
-        self.throttled = j.get('throttled', False)
-        self.throttled_reason = j.get('throttled_reason', None)
-
-    def is_type(self, type_):
-        """Returns whether or this packet contains data of the given type."""
-        return self.data and isinstance(self.data, type_)
-
-    @property
-    def data(self):
-        """Returns the data part of the Packet.
-
-        Throws an exception if Packet contains an error or throttle message."""
-        if self.error:
-            raise Exception(self.error)
-        if self.throttled:
-            raise Exception(self.throttled_reason)
-        return self._data
-
-
-class HelloEvent:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.id = j['id']
-        self.account = j.get('account', None)
-        self.session = SessionView(j['session'])
-        self.account_has_access = j.get('account_has_access', True)
-        self.room_is_private = j.get('room_is_private')
-        self.version = j.get('version')
-
-
-class PingEvent:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.time = j['time']
-        self.next = j['next']
-
-
-class BounceEvent:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.reason = j['reason']
-
-
-class AuthReply:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.success = j['success']
-
-
-class SnapshotEvent:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.identity = j['identity']
-        self.session_id = j['session_id']
-        self.version = j['version']
-        self.listing = [SessionView(sub_j) for sub_j in j['listing']]
-        self.log = [Message(sub_j) for sub_j in j['log']]
-
-
-class NickEvent:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.session_id = j['session_id']
-        self.id = j['id']
-        self.from_ = j['from']
-        self.to = j['to']
-
-
-class NickReply:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.session_id = j['session_id']
-        self.id = j['id']
-        self.from_ = j['from']
-        self.to = j['to']
-
-
-class Message:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.id = j['id']
-        self.parent = j.get('parent', None)
-        self.previous_edit_id = j.get('previous_edit_id', None)
-        self.time = j['time']
-        self.sender = SessionView(j['sender'])
-        self.content = j['content']
-        self.encryption_key_id = j.get('encryption_key_id', None)
-        self.edited = j.get('edited', None)
-        self.deleted = j.get('deleted', None)
-        self.truncated = j.get('truncated', False)
-
-
-class SendEvent:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.id = j['id']
-        self.parent = j.get('parent', None)
-        self.previous_edit_id = j.get('previous_edit_id', None)
-        self.time = j['time']
-        self.sender = SessionView(j['sender'])
-        self.content = j['content']
-        self.encryption_key_id = j.get('encryption_key_id', None)
-        self.edited = j.get('edited', None)
-        self.deleted = j.get('deleted', None)
-        self.truncated = j.get('truncated', False)
-
-
-class SendReply:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.id = j['id']
-        self.parent = j.get('parent', None)
-        self.previous_edit_id = j.get('previous_edit_id', None)
-        self.time = j['time']
-        self.sender = SessionView(j['sender'])
-        self.content = j['content']
-        self.encryption_key_id = j.get('encryption_key_id', None)
-        self.edited = j.get('edited', None)
-        self.deleted = j.get('deleted', None)
-        self.truncated = j.get('truncated', False)
-
-
-class SessionView:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.id = j['id']
-        self.name = j['name']
-        self.server_id = j['server_id']
-        self.server_era = j['server_era']
-        self.session_id = j['session_id']
-        self.is_staff = j.get('is_staff', False)
-        self.is_manager = j.get('is_manager', False)
-
-
-class JoinEvent:
-    # TODO: Add docstring
-
-    def __init__(self, j):
-        self.id = j['id']
-        self.name = j['name']
-        self.server_id = j['server_id']
-        self.server_era = j['server_era']
-        self.session_id = j['session_id']
-        self.is_staff = j.get('is_staff', False)
-        self.is_manager = j.get('is_manager', False)
-
-DATA_TYPES = {'hello-event': HelloEvent,
-              'snapshot-event': SnapshotEvent,
-              'ping-event': PingEvent,
-              'bounce-event': BounceEvent,
-              'auth-reply': AuthReply,
-              'nick-event': NickEvent,
-              'nick-reply': NickReply,
-              'send-event': SendEvent,
-              'send-reply': SendReply,
-              'join-event': JoinEvent}
-
 
 EUPHORIA_URL = "wss://euphoria.io:443/room/{0}/ws"
 
 
-class EuphoriaBot:
+class Bot:
     # TODO: Add docstring
 
     def __init__(self, room, uri_format=EUPHORIA_URL, loop=None):
@@ -254,6 +74,7 @@ class EuphoriaBot:
 
     async def wait_until_connected(self):
         """Pause execution of calling coroutine until bot is connected."""
+        assert not self.closed
         await self._connected.wait()
 
     async def wait_until_closed(self):
@@ -265,7 +86,7 @@ class EuphoriaBot:
         if self.closed:
             return
 
-        logger.info("{0} closing".format(self))
+        logger.info("%s closing", self)
 
         self._connected.clear()
         self._closed.set()
@@ -275,9 +96,11 @@ class EuphoriaBot:
 
         if self._sender:
             self._sender.cancel()
+            self._sender = None
 
         if self._receiver:
             self._receiver.cancel()
+            self._receiver = None
 
         for v in self._reply_map.values():
             v.cancel()
@@ -287,23 +110,22 @@ class EuphoriaBot:
             stream.close()
         self._streams = set()
 
-        logger.debug("{0} closed".format(self))
+        logger.debug("%s closed", self)
 
     async def stream(self):
         """Wait until the bot is connected, then return a stream that gets a
          full view of all the received messages that aren't replies."""
+        assert not self.closed
         await self.wait_until_connected()
-        stream = EuphoriaStream(loop=self._loop)
+        stream = Stream(loop=self._loop)
         self._streams.add(stream)
         return stream
 
     async def start(self):
         """Start the bot. This won't return until the bot is closed."""
-        assert self._sock is None
-        assert self._sender is None
-        assert self._receiver is None
+        assert not self.closed
 
-        logger.info("{0} connecting to {1}".format(self, self._uri))
+        logger.info("%s connecting to %s", self, self._uri)
         self._sock = await websockets.connect(self._uri)
 
         self._sender = asyncio.ensure_future(self._send_loop(),
@@ -311,7 +133,7 @@ class EuphoriaBot:
         self._receiver = asyncio.ensure_future(self._recv_loop(),
                                                loop=self._loop)
         self._connected.set()
-        logger.info("{0} connected".format(self))
+        logger.info("%s connected", self)
 
         await self._wait_then_close()
 
@@ -324,19 +146,25 @@ class EuphoriaBot:
             await self.close()
 
     async def _send_loop(self):
+        # This loop is started as a Task in Bot.start(), it retrieves data from
+        # the internal send queue and sends it out on the WebSocket.
         while self.connected:
             msg = await self._outgoing.get()
-            logger.debug("{0} sending message {1}".format(self, msg))
+            logger.debug("%s sending message %s", self, msg)
             await self._sock.send(msg)
 
     async def _recv_loop(self):
+        # This loop is started as a Task in Bot.start(), it gets packets from
+        # the WebSocket and routes them to the appropriate place.
         while self.connected:
             msg = await self._sock.recv()
             if msg is None:
                 return
-            logger.debug("{0} got message {1}".format(self, msg))
+            logger.debug("%s got message %s", self, msg)
             packet = Packet(json.loads(msg))
             if packet.id is not None:
+                # If the message has an ID that means its a response to a
+                # message we sent, so we put it into the corresponding future.
                 fut = self._take_reply_future(packet.id)
                 if fut:
                     fut.set_result(packet)
@@ -345,47 +173,61 @@ class EuphoriaBot:
             assert packet.data is not None
             to_delete = []
             for stream in self._streams:
+                # Every stream should get a copy of this Packet.
                 if stream.open:
                     stream._send(packet)
                 else:
+                    # Someone closed this stream so we can delete it at the end
+                    # of the loop.
                     to_delete.append(stream)
             for stream in to_delete:
                 self._streams.remove(stream)
 
     def _next_id_and_future(self):
+        # Generate a new ID to put into a message we are about to send, and
+        # a corresponding future to recieve the eventual reply from the server.
         id_ = str(self._next_msg_id)
         future = asyncio.Future()
         self._reply_map[id_] = future
         return (id_, future)
 
     def _take_reply_future(self, id_):
+        # If there is a future for this ID, then we retrieve it and remove it
+        # from the map. (There will only be one response per ID.)
         if id_ in self._reply_map:
             future = self._reply_map[id_]
             del self._reply_map[id_]
             return future
 
     async def _send_msg_with_reply_type(self, type_, data):
+        # A small helper to send messages that will be replied to by the
+        # server.
         id_, future = self._next_id_and_future()
         j = json.dumps({"type": type_, "id": id_, "data": data})
         await self._outgoing.put(j)
         return future
 
     async def _send_msg_no_reply(self, type_, data):
+        # A small helper to send a message that won't receive a reply from the
+        # server.
         j = json.dumps({"type": type_, "data": data})
         await self._outgoing.put(j)
 
     async def send_nick(self, name):
         """Sends a nick command to the server. Returns a future that will
          contain a nick-reply."""
+        assert self.connected
         return await self._send_msg_with_reply_type("nick", {"name": name})
 
     async def send_ping_reply(self, time):
         """Sends a ping reply to the server."""
+        assert self.connected
         await self._send_msg_no_reply("ping-reply", {"time": time})
 
     async def send_auth(self, passcode):
         """Sends an auth command to the server. Returns a future that will
          contain an auth-reply."""
+        assert self.connected
         return await self._send_msg_with_reply_type("auth",
                                                     {"type": "passcode",
                                                      "passcode": passcode})
@@ -393,11 +235,12 @@ class EuphoriaBot:
     async def send(self, content, parent=None):
         """Sends a send command to the server. Returns a future that will
          contain a send-reply."""
+        assert self.connected
         return await self._send_msg_with_reply_type("send",
                                                     {"content": content})
 
 
-class EuphoriaStream:
+class Stream:
     # TODO: Add docstring
 
     def __init__(self, loop=None):
@@ -407,13 +250,21 @@ class EuphoriaStream:
         self._waiting_on = None
 
     def _send(self, packet):
+        # This is used by Bot's receive loop to put an item into the Stream.
         self._queue.put_nowait(packet)
 
     def close(self):
         """Closes this stream. Will not receive any more messages from bot."""
         self._bot_open = False
         if self._waiting_on:
+            # If there's somebody waiting inside a Stream.any() we have to
+            # cancel them because no more messages are coming.
             self._waiting_on.cancel()
+
+    @property
+    def loop(self):
+        """The asyncio event loop this Stream uses."""
+        return self._loop
 
     @property
     def open(self):
@@ -422,11 +273,16 @@ class EuphoriaStream:
 
     async def any(self):
         """Returns the next message from the bot."""
+        # Only one coroutine should be using a stream, so if self._waiting_on
+        # isn't None, then clearly more then one coroutine is using it.
         assert self._waiting_on is None
-        self._waiting_on = asyncio.ensure_future(self._queue.get())
-        result = await self._waiting_on
-        self._waiting_on = None
-        return result
+        self._waiting_on = asyncio.ensure_future(
+            self._queue.get(), loop=self._loop)
+        try:
+            result = await self._waiting_on
+            return result
+        finally:
+            self._waiting_on = None
 
     async def skip_until(self, condition):
         """Discards messages in this stream until one matches condition."""
