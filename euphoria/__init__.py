@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 EUPHORIA_URL = "wss://euphoria.io:443/room/{0}/ws"
 
 
-class Bot:
+class Client:
     # TODO: Add docstring
 
     def __init__(self, room, uri_format=EUPHORIA_URL, loop=None):
@@ -49,40 +49,40 @@ class Bot:
 
     @property
     def room(self):
-        """The room this bot may be connected to."""
+        """The room this client may be connected to."""
         return self._room
 
     @property
     def uri(self):
-        """The URI this bot will connect to."""
+        """The URI this client will connect to."""
         return self._uri
 
     @property
     def loop(self):
-        """The asyncio event loop this bot uses."""
+        """The asyncio event loop this client uses."""
         return self._loop
 
     @property
     def connected(self):
-        """Returns whether this bot is connected to the server."""
+        """Returns whether this client is connected to the server."""
         return self._connected.is_set()
 
     @property
     def closed(self):
-        """Returns whether this bot is closed."""
+        """Returns whether this client is closed."""
         return self._closed.is_set()
 
     async def wait_until_connected(self):
-        """Pause execution of calling coroutine until bot is connected."""
+        """Pause execution of calling coroutine until client is connected."""
         assert not self.closed
         await self._connected.wait()
 
     async def wait_until_closed(self):
-        """Paused execution of the calling coroutine until bot has closed."""
+        """Paused execution of the calling coroutine until client has closed."""
         await self._closed.wait()
 
     async def close(self):
-        """Close the bot, never to be started again."""
+        """Close the Client, never to be started again."""
         if self.closed:
             return
 
@@ -113,7 +113,7 @@ class Bot:
         logger.debug("%s closed", self)
 
     async def stream(self):
-        """Wait until the bot is connected, then return a stream that gets a
+        """Wait until the Client is connected, then return a stream that gets a
          full view of all the received messages that aren't replies."""
         assert not self.closed
         await self.wait_until_connected()
@@ -122,7 +122,7 @@ class Bot:
         return stream
 
     async def start(self):
-        """Start the bot. This won't return until the bot is closed."""
+        """Start the Client. This won't return until the Client is closed."""
         assert not self.closed
 
         logger.info("%s connecting to %s", self, self._uri)
@@ -146,7 +146,7 @@ class Bot:
             await self.close()
 
     async def _send_loop(self):
-        # This loop is started as a Task in Bot.start(), it retrieves data from
+        # This loop is started as a Task in Client.start(), it retrieves data from
         # the internal send queue and sends it out on the WebSocket.
         while self.connected:
             msg = await self._outgoing.get()
@@ -154,7 +154,7 @@ class Bot:
             await self._sock.send(msg)
 
     async def _recv_loop(self):
-        # This loop is started as a Task in Bot.start(), it gets packets from
+        # This loop is started as a Task in Client.start(), it gets packets from
         # the WebSocket and routes them to the appropriate place.
         while self.connected:
             msg = await self._sock.recv()
@@ -245,17 +245,17 @@ class Stream:
 
     def __init__(self, loop=None):
         self._loop = loop
-        self._bot_open = True
+        self._client_open = True
         self._queue = asyncio.Queue(loop=loop)
         self._waiting_on = None
 
     def _send(self, packet):
-        # This is used by Bot's receive loop to put an item into the Stream.
+        # This is used by Client's receive loop to put an item into the Stream.
         self._queue.put_nowait(packet)
 
     def close(self):
-        """Closes this stream. Will not receive any more messages from bot."""
-        self._bot_open = False
+        """Closes this stream. Will not receive any more messages from the Client."""
+        self._client_open = False
         if self._waiting_on:
             # If there's somebody waiting inside a Stream.any() we have to
             # cancel them because no more messages are coming.
@@ -268,11 +268,11 @@ class Stream:
 
     @property
     def open(self):
-        """Returns whether this stream can receive messages from the bot."""
-        return self._bot_open
+        """Returns whether this stream can receive messages from the Client."""
+        return self._client_open
 
     async def any(self):
-        """Returns the next message from the bot."""
+        """Returns the next message from the Client."""
         # Only one coroutine should be using a stream, so if self._waiting_on
         # isn't None, then clearly more then one coroutine is using it.
         assert self._waiting_on is None

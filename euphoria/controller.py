@@ -47,6 +47,7 @@ class PingController:
 
 class NickAndAuthController:
     # TODO: add docstring
+
     def __init__(self, bot, desired_nick, passcode=None):
         self._bot = bot
         self._loop = bot.loop

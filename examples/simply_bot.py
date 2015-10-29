@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO)
 loop = asyncio.get_event_loop()
 room = input("room name> ")
 passcode = input("passcode> ")
-bot = euphoria.Bot(room, loop=loop)
+bot = euphoria.Client(room, loop=loop)
 
 async def main_task():
     asyncio.ensure_future(bot.start())
