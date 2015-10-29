@@ -58,6 +58,10 @@ class Client:
         self._connected = asyncio.Event(loop=loop)
         self._closed = asyncio.Event(loop=loop)
 
+    def __repr__(self):
+        fmt = "<euphoria.Client room='{0}' uri='{1}'>"
+        return fmt.format(self._room, self._uri)
+
     @property
     def room(self) -> str:
         """The room this client may be connected to.

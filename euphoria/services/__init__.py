@@ -14,13 +14,4 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""A collection of exceptions this library may throw at you"""
-
-class EuphoriaException(Exception):
-    """A baseclass for euphoria-py exceptions."""
-    pass
-
-
-class ErrorResponse(EuphoriaException):
-    """Raised when a :py:class:`euphoria.Packet` contains an error and you try to access its data."""
-    pass
+"""A collection of useful :py:class:`euphoria.Bot` services."""

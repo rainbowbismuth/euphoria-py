@@ -253,12 +253,11 @@ class NickAndAuth:
 
                 elif packet.is_type(BounceEvent):
                     if self.authorized():
-                        # If we were authorized we're not anymore
+                        logger.debug("%s: no longer authorized", self)
                         self._set_authorized(False)
                         continue
                     if self.auth_failed:
-                        # If we had a failure we can't try again until we have
-                        # a new passcode
+                        logger.debug("%s: auth failed, can't try again", self)
                         continue
                     if not "passcode" in packet.data.auth_options:
                         logger.error("%s: no passcode method", self)
@@ -276,21 +275,24 @@ class NickAndAuth:
                         self._auth_failure.set()
                         continue
                     await self._set_authorized(True)
+                    logger.debug("%s: auth successful", self)
 
             except ErrorResponse:
                 logger.debug("%s: error packet", self, exc_info=True)
                 continue
 
     async def _nick_setter_task(self):
+        logger.debug("%s: waiting for auth to set nick", self)
         await self.wait_for_auth()
+        logger.debug("%s: auth aquired, going to try to set nick", self)
         if self.nick_is_desired():
             return
         if self.nick_failed:
             return
         nick_reply = await self._client.send_nick(self._desired_nick)
         try:
+            self._nick_setter = None
             self._set_current_nick(nick_reply.data.to)
         except ErrorResponse:
             logger.debug("%s: error packet", self, exc_info=True)
             self._nick_failure.set()
-        self._nick_setter = None

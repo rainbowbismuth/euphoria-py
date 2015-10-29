@@ -14,13 +14,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""A collection of exceptions this library may throw at you"""
+"""Say !quit to call sys.exit() and shutdown"""
 
-class EuphoriaException(Exception):
-    """A baseclass for euphoria-py exceptions."""
-    pass
+from euphoria import SendEvent
+import sys
 
-
-class ErrorResponse(EuphoriaException):
-    """Raised when a :py:class:`euphoria.Packet` contains an error and you try to access its data."""
-    pass
+async def main(bot):
+    client = bot.client
+    stream = await client.stream()
+    while True:
+        send_event = await stream.skip_until(SendEvent)
+        if send_event.data.content.startswith("!quit"):
+            await client.send("goodbye!", parent=send_event.data.id)
+            sys.exit()

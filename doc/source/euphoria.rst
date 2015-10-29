@@ -12,6 +12,14 @@ Subpackages
 Submodules
 ----------
 
+euphoria.bot module
+----------------------
+
+.. automodule:: euphoria.bot
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 euphoria.client module
 ----------------------
 

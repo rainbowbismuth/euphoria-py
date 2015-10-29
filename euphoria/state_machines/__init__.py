@@ -16,4 +16,4 @@
 
 from .nick_and_auth import NickAndAuth
 
-__ALL__ = ['NickAndAuth']
+__all__ = ['NickAndAuth']

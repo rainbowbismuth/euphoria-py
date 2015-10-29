@@ -72,13 +72,13 @@ class Stream:
         This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
 
         :rtype: euphoria.Packet
-        :raises euphoria.StreamEmpty: if the stream is both empty and closed"""
+        :raises asyncio.CancelledError: if the client is closed"""
         # Only one coroutine should be using a stream, so if self._waiting_on
         # isn't None, then clearly more then one coroutine is using it.
         assert self._waiting_on is None
 
-        if not self._client_open and self.empty():
-            raise StreamEmpty("Stream is closed and empty.")
+        if not self._client_open:
+            raise asyncio.CancelledError
 
         self._waiting_on = asyncio.ensure_future(
             self._queue.get(), loop=self._loop)
@@ -94,7 +94,7 @@ class Stream:
         This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
 
         :rtype: euphoria.Packet
-        :raises euphoria.StreamEmpty: if the stream is both empty and closed"""
+        :raises asyncio.CancelledError: if the client is closed"""
         if inspect.isclass(condition):
             kls = condition
             # TODO: change this to a def instead of a lambda
@@ -113,7 +113,7 @@ class Stream:
          This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
 
          :rtype: euphoria.Packet
-         :raises euphoria.StreamEmpty: if the stream is both empty and closed"""
+         :raises asyncio.CancelledError: if the client is closed"""
         if inspect.isclass(condition):
             kls = condition
             # TODO: change this to a def instead of a lambda

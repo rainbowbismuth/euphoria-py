@@ -18,11 +18,12 @@
 
 from .exceptions import *
 from .data import *
+from .bot import *
 from .stream import *
 from .client import *
 
-__all__ = ['Client', 'Stream', 'EuphoriaException', 'ErrorResponse',
-           'StreamEmpty', 'Packet', 'HelloEvent',
+__all__ = ['Client', 'Stream', 'Bot', 'EuphoriaException', 'ErrorResponse',
+           'Packet', 'HelloEvent',
            'PingEvent', 'BounceEvent', 'AuthReply', 'SnapshotEvent',
            'NickEvent', 'NickReply', 'Message', 'SendEvent', 'SendReply',
            'SessionView', 'JoinEvent', 'PartEvent', 'NetworkEvent',

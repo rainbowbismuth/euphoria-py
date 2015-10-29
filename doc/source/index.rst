@@ -10,8 +10,10 @@ Table of Contents
    :maxdepth: 2
 
    euphoria
+   euphoria.services
    euphoria.state_machines
    euphoria.test
+   modules
 
 Indices and tables
 ==================

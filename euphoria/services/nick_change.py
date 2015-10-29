@@ -14,13 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""A collection of exceptions this library may throw at you"""
+"""Say !nick new_nick to change the bots name to new_nick"""
 
-class EuphoriaException(Exception):
-    """A baseclass for euphoria-py exceptions."""
-    pass
+from euphoria import SendEvent
 
-
-class ErrorResponse(EuphoriaException):
-    """Raised when a :py:class:`euphoria.Packet` contains an error and you try to access its data."""
-    pass
+async def main(bot):
+    client = bot.client
+    nick_and_auth = bot.nick_and_auth
+    stream = await client.stream()
+    while True:
+        send_event = await stream.skip_until(SendEvent)
+        if send_event.data.content[0:5] == "!nick":
+            nick_and_auth.desired_nick = send_event.data.content[6:]
