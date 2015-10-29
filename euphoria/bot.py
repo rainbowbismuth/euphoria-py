@@ -198,7 +198,7 @@ async def main(config_file='config.ini', loop=None):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(loop))
+    loop.run_until_complete(main(loop=loop))
     tasks = asyncio.Task.all_tasks(loop=loop)
     for task in tasks:
         task.cancel()
