@@ -1,5 +1,3 @@
-# TODO: Add docstring
-
 # euphoria-py
 # Copyright (C) 2015  Emily A. Bellows
 #
@@ -16,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Contains the class that lets you connect to an euphoria server"""
+
 import asyncio
 from asyncio import BaseEventLoop, Future
 import websockets
@@ -30,9 +30,12 @@ logger = logging.getLogger(__name__)
 
 EUPHORIA_URL = "wss://euphoria.io:443/room/{0}/ws"
 
-
 class Client:
-    """A websocket client for Euphoria."""
+    """A websocket client for Euphoria.
+
+    :param str room: The room the client should join when started
+    :param asyncio.BaseEventLoop loop: The asyncio event loop you want to use
+    """
 
     def __init__(self, room: str, uri_format: str=EUPHORIA_URL, loop: BaseEventLoop=None):
         self._incoming = asyncio.Queue(loop=loop)
@@ -53,45 +56,63 @@ class Client:
 
     @property
     def room(self) -> str:
-        """The room this client may be connected to."""
+        """The room this client may be connected to.
+
+        :rtype: str"""
         return self._room
 
     @property
     def uri(self) -> str:
-        """The URI this client will connect to."""
+        """The URI this client will connect to.
+
+        :rtype: str"""
         return self._uri
 
     @property
     def loop(self) -> BaseEventLoop:
-        """The asyncio event loop this client uses."""
+        """The asyncio event loop this client uses.
+
+        :rtype: asyncio.BaseEventLoop"""
         return self._loop
 
     @property
     def started(self) -> bool:
-        """Returns whether this client has been started."""
+        """Returns whether this client has been started.
+
+        :rtype: bool"""
         return self._started.is_set()
 
     @property
     def connected(self) -> bool:
-        """Returns whether this client is connected to the server."""
+        """Returns whether this client is connected to the server.
+
+        :rtype: bool"""
         return self._connected.is_set()
 
     @property
     def closed(self) -> bool:
-        """Returns whether this client is closed."""
+        """Returns whether this client is closed.
+
+        :rtype: bool"""
         return self._closed.is_set()
 
     async def wait_until_started(self) -> None:
-        """Pause execution of the calling coroutine until the client has been started."""
+        """Pause execution of the calling coroutine until the client has been started.
+
+        This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_."""
         await self._started.wait()
 
     async def wait_until_connected(self) -> None:
-        """Pause execution of calling coroutine until client is connected."""
+        """Pause execution of calling coroutine until client is connected.
+
+        This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_."""
         assert not self.closed
         await self._connected.wait()
 
     async def wait_until_closed(self) -> None:
-        """Paused execution of the calling coroutine until client has closed."""
+        """Paused execution of the calling coroutine until client has closed.
+
+        This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_."""
         await self._closed.wait()
 
     def close(self) -> None:
@@ -130,7 +151,11 @@ class Client:
 
     async def stream(self) -> Stream:
         """Wait until the Client is connected, then return a stream that gets a
-         full view of all the received messages that aren't replies."""
+         full view of all the received messages that aren't replies.
+
+        This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
+
+        :rtype: euphoria.Stream"""
         assert not self.closed
         await self.wait_until_connected()
         stream = Stream(loop=self._loop)
@@ -138,7 +163,9 @@ class Client:
         return stream
 
     async def start(self) -> None:
-        """Start the Client. This won't return until the Client is closed."""
+        """Start the Client. This won't return until the Client is closed.
+
+        This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_."""
         assert not self.started
         self._started.set()
 
@@ -229,18 +256,26 @@ class Client:
 
     def send_nick(self, name: str) -> Future:
         """Sends a nick command to the server. Returns a future that will
-         contain a nick-reply."""
+         contain a :py:class:`euphoria.NickReply`.
+
+        :param str name: The new nick you want this Client to have
+        :rtype: asyncio.Future"""
         assert self.connected
         return self._send_msg_with_reply_type("nick", {"name": name})
 
     def send_ping_reply(self, time: int) -> None:
-        """Sends a ping reply to the server."""
+        """Sends a ping reply to the server.
+
+        :param int time: The time you got passed in a PingEvent"""
         assert self.connected
         self._send_msg_no_reply("ping-reply", {"time": time})
 
     def send_auth(self, passcode: str) -> Future:
         """Sends an auth command to the server. Returns a future that will
-         contain an auth-reply."""
+         contain an :py:class:`euphoria.AuthReply`.
+
+        :param str passcode: The password to the room the Client is connected to
+        :rtype: asyncio.Future"""
         assert self.connected
         return self._send_msg_with_reply_type("auth",
                                               {"type": "passcode",
@@ -248,7 +283,10 @@ class Client:
 
     def send(self, content: str, parent: str=None) -> Future:
         """Sends a send command to the server. Returns a future that will
-         contain a send-reply."""
+         contain a :py:class:`euphoria.SendReply`.
+
+        :param str content: The message you want this Client to say to the room
+        :rtype: asyncio.Future"""
         assert self.connected
         return self._send_msg_with_reply_type("send",
                                               {"content": content})

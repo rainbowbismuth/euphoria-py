@@ -1,5 +1,3 @@
-# TODO: Add docstring
-
 # euphoria-py
 # Copyright (C) 2015  Emily A. Bellows
 #
@@ -16,22 +14,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""A collection of exceptions this library may throw at you"""
 
 class EuphoriaException(Exception):
-    # TODO: Add docstring
+    """A baseclass for euphoria-py exceptions."""
     pass
 
 
 class ErrorResponse(EuphoriaException):
-    # TODO: Add docstring
-    pass
-
-
-class ThrottledResponse(EuphoriaException):
-    # TODO: Add docstring
+    """Raised when a :py:class:`euphoria.Packet` contains an error and you try to access its data."""
     pass
 
 
 class StreamEmpty(EuphoriaException):
-    # TODO: Add docstring
+    """Raised when you try to retrieve data from an empty and closed :py:class:`euphoria.Stream`."""
     pass

@@ -1,5 +1,3 @@
-# TODO: Add docstring
-
 # euphoria-py
 # Copyright (C) 2015  Emily A. Bellows
 #
@@ -16,7 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Euphoria client and bot library, for Python 3.5"""
+
 from .exceptions import *
 from .data import *
 from .stream import *
 from .client import *
+
+__all__ = ['Client', 'Stream', 'EuphoriaException', 'ErrorResponse',
+           'StreamEmpty', 'Packet', 'HelloEvent',
+           'PingEvent', 'BounceEvent', 'AuthReply', 'SnapshotEvent',
+           'NickEvent', 'NickReply', 'Message', 'SendEvent', 'SendReply',
+           'SessionView', 'JoinEvent']

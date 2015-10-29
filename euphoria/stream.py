@@ -1,5 +1,3 @@
-# TODO: Add docstring
-
 # euphoria-py
 # Copyright (C) 2015  Emily A. Bellows
 #
@@ -16,14 +14,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""Contains a class that makes it easy to process streams of packets"""
+
 import asyncio
 from asyncio import BaseEventLoop
 import inspect
 from .exceptions import *
 from .data import Packet
 
+
 class Stream:
-    # TODO: Add docstring
+    """A stream of packets from a single Client.
+
+    :param asyncio.BaseEventLoop loop: The asyncio event loop you want to use"""
 
     def __init__(self, loop: BaseEventLoop=None):
         self._loop = loop
@@ -45,20 +48,31 @@ class Stream:
 
     @property
     def loop(self) -> BaseEventLoop:
-        """The asyncio event loop this Stream uses."""
+        """The asyncio event loop this Stream uses.
+
+        :rtype: asyncio.BaseEventLoop"""
         return self._loop
 
     @property
     def open(self) -> bool:
-        """Returns whether this stream can receive messages from the Client."""
+        """Returns whether this stream can receive messages from the Client.
+
+        :rtype: bool"""
         return self._client_open
 
     def empty(self) -> bool:
-        """Returns whether or not the Stream is currently empty."""
+        """Returns whether or not the Stream is currently empty.
+
+        :rtype: bool"""
         return self._queue.empty()
 
     async def any(self) -> Packet:
-        """Returns the next message from the Client."""
+        """Returns the next message from the Client.
+
+        This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
+
+        :rtype: euphoria.Packet
+        :raises euphoria.StreamEmpty: if the stream is both empty and closed"""
         # Only one coroutine should be using a stream, so if self._waiting_on
         # isn't None, then clearly more then one coroutine is using it.
         assert self._waiting_on is None
@@ -75,7 +89,12 @@ class Stream:
             self._waiting_on = None
 
     async def skip_until(self, condition) -> Packet:
-        """Discards messages in this stream until one matches condition."""
+        """Discards messages in this stream until one matches condition.
+
+        This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
+
+        :rtype: euphoria.Packet
+        :raises euphoria.StreamEmpty: if the stream is both empty and closed"""
         if inspect.isclass(condition):
             kls = condition
             # TODO: change this to a def instead of a lambda
@@ -89,7 +108,12 @@ class Stream:
 
     async def select(self, condition) -> Packet:
         """Finds a message in this stream matching the given condition, without
-         discarding the rest of them."""
+         discarding the rest of them.
+
+         This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
+
+         :rtype: euphoria.Packet
+         :raises euphoria.StreamEmpty: if the stream is both empty and closed"""
         if inspect.isclass(condition):
             kls = condition
             # TODO: change this to a def instead of a lambda
