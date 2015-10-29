@@ -45,6 +45,7 @@ class Client:
         self._receiver = None
         self._streams = set()
 
+        self._started = asyncio.Event(loop=loop)
         self._connected = asyncio.Event(loop=loop)
         self._closed = asyncio.Event(loop=loop)
 
@@ -64,6 +65,11 @@ class Client:
         return self._loop
 
     @property
+    def started(self):
+        """Returns whether this client has been started."""
+        return self._started.is_set()
+
+    @property
     def connected(self):
         """Returns whether this client is connected to the server."""
         return self._connected.is_set()
@@ -72,6 +78,10 @@ class Client:
     def closed(self):
         """Returns whether this client is closed."""
         return self._closed.is_set()
+
+    async def wait_until_started(self):
+        """Pause execution of the calling coroutine until the client has been started."""
+        await self._started.wait()
 
     async def wait_until_connected(self):
         """Pause execution of calling coroutine until client is connected."""
@@ -127,7 +137,8 @@ class Client:
 
     async def start(self):
         """Start the Client. This won't return until the Client is closed."""
-        assert not self.closed
+        assert not self.started
+        self._started.set()
 
         logger.info("%s connecting to %s", self, self._uri)
         self._sock = await websockets.connect(self._uri)
@@ -238,4 +249,4 @@ class Client:
          contain a send-reply."""
         assert self.connected
         return self._send_msg_with_reply_type("send",
-                                                    {"content": content})
+                                              {"content": content})
