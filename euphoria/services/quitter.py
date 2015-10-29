@@ -14,12 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Say !quit to call sys.exit() and shutdown"""
+"""Say '!quit' to call sys.exit() and shutdown"""
 
-from euphoria import SendEvent
+from euphoria import SendEvent, Bot
 import sys
 
-async def main(bot):
+async def main(bot: Bot):
+    """Entry point into the '!quit' service.
+
+    This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
+
+    :param euphoria.Bot bot: This service's bot"""
     client = bot.client
     stream = await client.stream()
     while True:

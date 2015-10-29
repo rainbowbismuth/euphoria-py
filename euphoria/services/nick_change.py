@@ -14,11 +14,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Say !nick new_nick to change the bots name to new_nick"""
+"""Say '!nick' new_nick to change the bots name to new_nick"""
 
-from euphoria import SendEvent
+from euphoria import SendEvent, Bot
 
-async def main(bot):
+async def main(bot: Bot):
+    """Entry point into the !nick' service.
+
+    This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
+
+    :param euphoria.Bot bot: This service's bot"""
     client = bot.client
     nick_and_auth = bot.nick_and_auth
     stream = await client.stream()

@@ -14,14 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Say !alloc to see some neat memory statistics"""
+"""Say '!alloc' to see some neat memory statistics"""
 
-from euphoria import SendEvent
+from euphoria import SendEvent, Bot
 import tracemalloc
 import linecache
 import os
 
 tracemalloc.start()
+
 
 def display_top(snapshot, group_by='lineno', limit=10):
     lines = []
@@ -39,7 +40,7 @@ def display_top(snapshot, group_by='lineno', limit=10):
         # replace "/path/to/module/file.py" with "module/file.py"
         filename = os.sep.join(frame.filename.split(os.sep)[-2:])
         lines.append("#%s: %s:%s: %.1f KiB"
-              % (index, filename, frame.lineno, stat.size / 1024))
+                     % (index, filename, frame.lineno, stat.size / 1024))
         line = linecache.getline(frame.filename, frame.lineno).strip()
         if line:
             lines.append('    %s' % line)
@@ -52,7 +53,12 @@ def display_top(snapshot, group_by='lineno', limit=10):
     lines.append("Total allocated size: %.1f KiB" % (total / 1024))
     return '\n'.join(lines)
 
-async def main(bot):
+async def main(bot: Bot):
+    """Entry point into the '!alloc' service.
+
+    This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
+
+    :param euphoria.Bot bot: This service's bot"""
     client = bot.client
     stream = await client.stream()
     while True:
