@@ -26,7 +26,6 @@ passcode = input("passcode> ")
 bot = euphoria.Client(room, loop=loop)
 
 async def main_task():
-    asyncio.ensure_future(bot.start(), loop=loop)
     stream = await bot.stream()
     hello = await stream.skip_until(euphoria.HelloEvent)
     logging.info("We're connected, hello-event received!")
@@ -64,4 +63,5 @@ async def send_event_loop():
             bot.close()
             return
 
-loop.run_until_complete(main_task())
+loop.create_task(main_task())
+loop.run_until_complete(bot.start())

@@ -21,6 +21,7 @@ from asyncio import BaseEventLoop, Future
 import websockets
 import json
 import logging
+import weakref
 from typing import Tuple
 from .exceptions import *
 from .data import *
@@ -51,7 +52,7 @@ class Client:
         self._sock = None
         self._sender = None
         self._receiver = None
-        self._streams = set()
+        self._streams = weakref.WeakSet()
 
         self._started = asyncio.Event(loop=loop)
         self._connected = asyncio.Event(loop=loop)
