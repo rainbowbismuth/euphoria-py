@@ -22,6 +22,7 @@ import json
 import inspect
 import logging
 from .data import *
+from .exceptions import *
 
 logger = logging.getLogger(__name__)
 
@@ -282,7 +283,7 @@ class Stream:
         assert self._waiting_on is None
 
         if not self._client_open and self.empty():
-            raise Exception("Stream is closed and empty.")
+            raise StreamEmpty("Stream is closed and empty.")
 
         self._waiting_on = asyncio.ensure_future(
             self._queue.get(), loop=self._loop)

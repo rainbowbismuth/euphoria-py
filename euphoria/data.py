@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from .exceptions import *
 
 class Packet:
     # TODO: Add docstring
@@ -39,9 +40,9 @@ class Packet:
 
         Throws an exception if Packet contains an error or throttle message."""
         if self.error:
-            raise Exception(self.error)
+            raise ErrorResponse(self.error)
         if self.throttled:
-            raise Exception(self.throttled_reason)
+            raise ThrottledResponse(self.throttled_reason)
         return self._data
 
 
