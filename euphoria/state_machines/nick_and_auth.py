@@ -252,6 +252,7 @@ class NickAndAuth:
                     await self._set_authorized(not packet.data.room_is_private)
 
                 elif packet.is_type(BounceEvent):
+                    self._set_current_nick("")
                     if self.authorized():
                         logger.debug("%s: no longer authorized", self)
                         self._set_authorized(False)
