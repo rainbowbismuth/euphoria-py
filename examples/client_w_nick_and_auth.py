@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
+
 import euphoria
 from euphoria.state_machines import NickAndAuth
 import logging
@@ -41,6 +42,9 @@ async def send_event_loop():
             await client.send("goodbye!", parent=send_event.data.id)
             client.close()
             return
+
+        elif send_event.data.content[0:5] == "!nick":
+            nick_and_auth.desired_nick = send_event.data.content[6:]
 
 loop.create_task(nick_and_auth.start())
 loop.create_task(send_event_loop())

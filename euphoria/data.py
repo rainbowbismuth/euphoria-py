@@ -431,6 +431,7 @@ class SnapshotEvent:
 
 
 class NetworkEvent:
+
     def __init__(self, j: dict):
         self._type = j['type']
         self._server_id = j['server_id']
@@ -456,6 +457,7 @@ class NetworkEvent:
 
         :rtype: str"""
         return self._server_era
+
 
 class NickBased:
 
@@ -493,6 +495,7 @@ class NickBased:
         :rtype: str"""
         return self._to
 
+
 class NickEvent(NickBased):
     """A NickEvent indicates that a session successfully changed their nick."""
     pass
@@ -502,9 +505,11 @@ class NickReply(NickBased):
     """A NickReply indicates that you successfully changed your nick."""
     pass
 
+
 class SendEvent(MessageBased):
     """A SendEvent indicates a message received by the room from another session."""
     pass
+
 
 class EditMessageEvent(MessageBased):
     """An EditMessageEvent indicates that a message in the room has been modified or deleted."""
@@ -516,6 +521,7 @@ class SendReply(MessageBased):
 
 class JoinEvent(SessionViewBased):
     """A JoinEvent indicates a session just joined the room."""
+
 
 class PartEvent(SessionViewBased):
     """A PartEvent indicates a session just disconnected from the room."""
