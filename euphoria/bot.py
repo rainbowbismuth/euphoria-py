@@ -168,12 +168,12 @@ class Bot:
                               loop=self._client.loop)
         self.start_all()
 
-async def main(config='config.ini', loop=None):
+async def main(config_file='config.ini', loop=None):
     """Run a Bot with restarts.
 
     This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_."""
     config = ConfigParser()
-    config.read_file(open(config))
+    config.read_file(open(config_file))
     tries = 0
     while True:
         bot = None
