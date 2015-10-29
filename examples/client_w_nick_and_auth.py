@@ -23,13 +23,10 @@ logging.basicConfig(level=logging.INFO)
 
 loop = asyncio.get_event_loop()
 
-room = input("room name> ")
-passcode = input("passcode> ")
-
-client = euphoria.Client(room, loop=loop)
+client = euphoria.Client(input("room name> "), loop=loop)
 
 nick_and_auth = NickAndAuth(client, "nick_and_auth_client")
-nick_and_auth.passcode = passcode
+nick_and_auth.passcode = input("passcode> ")
 
 async def send_event_loop():
     stream = await client.stream()
