@@ -25,6 +25,9 @@ from configparser import ConfigParser
 
 logger = logging.getLogger(__name__)
 
+#TODO: Add closed property? and wait until closed? + started etc?
+#TODO: Add Ctrl-C handler, see https://github.com/rainbowbismuth/euphoria-py/issues/4
+#TODO: What am I doing with _exit_exc?
 
 class Bot:
     """A high-level bot for euphoria.
