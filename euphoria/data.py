@@ -34,7 +34,7 @@ class Packet:
         self.throttled_reason = j.get('throttled_reason', None)
 
     def is_type(self, type_):
-        """Returns whether or this packet contains data of the given type."""
+        """Returns whether or not this packet contains data of the given type."""
         return self.data and isinstance(self.data, type_)
 
     @property
