@@ -271,11 +271,19 @@ class Stream:
         """Returns whether this stream can receive messages from the Client."""
         return self._client_open
 
+    def empty(self):
+        """Returns whether or not the Stream is currently empty."""
+        return self._queue.empty()
+
     async def any(self):
         """Returns the next message from the Client."""
         # Only one coroutine should be using a stream, so if self._waiting_on
         # isn't None, then clearly more then one coroutine is using it.
         assert self._waiting_on is None
+
+        if not self._client_open and self.empty():
+            raise Exception("Stream is closed and empty.")
+
         self._waiting_on = asyncio.ensure_future(
             self._queue.get(), loop=self._loop)
         try:
