@@ -91,9 +91,6 @@ class Client:
         self._connected.clear()
         self._closed.set()
 
-        if self._sock and self._sock.open:
-            await self._sock.close()
-
         if self._sender:
             self._sender.cancel()
             self._sender = None
@@ -109,6 +106,9 @@ class Client:
         for stream in self._streams:
             stream.close()
         self._streams = set()
+
+        if self._sock and self._sock.open:
+            await self._sock.close()
 
         logger.debug("%s closed", self)
 
