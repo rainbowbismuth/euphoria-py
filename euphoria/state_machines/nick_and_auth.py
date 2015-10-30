@@ -285,7 +285,7 @@ class NickAndAuth:
     async def _nick_setter_task(self):
         logger.debug("%s: waiting for auth to set nick", self)
         await self.wait_for_auth()
-        logger.debug("%s: auth aquired, going to try to set nick", self)
+        logger.debug("%s: auth acquired, going to try to set nick", self)
         if self.nick_is_desired():
             return
         if self.nick_failed:
