@@ -17,6 +17,10 @@ loggers:
     level: INFO
     handlers: [console]
     propagate: no
+  euphoria.bot:
+    level: DEBUG
+    handlers: [console]
+    propagate: no
 root:
   level: INFO
   handlers: [console]

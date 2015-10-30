@@ -22,7 +22,7 @@ import asyncio
 import logging
 import logging.config
 import importlib
-from configparser import ConfigParser
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +33,11 @@ logger = logging.getLogger(__name__)
 class Bot:
     """A high-level bot for euphoria.
 
-    :param configparser.ConfigParser config: Bot configuration
+    :param dict config: Bot configuration
     :param asyncio.BaseEventLoop loop: The asyncio event loop you want to use
     """
 
-    def __init__(self, config: ConfigParser, loop: asyncio.BaseEventLoop=None):
+    def __init__(self, config: dict, loop: asyncio.BaseEventLoop=None):
         self._config = config
 
         bot_config = config['bot']
@@ -45,7 +45,7 @@ class Bot:
         passcode = bot_config.get('passcode', '')
         nick = bot_config.get('nick', 'config_me')
         uri_format = bot_config.get('uri_format', EUPHORIA_URL)
-        handle_pings = bot_config.getboolean('handle_pings', fallback=True)
+        handle_pings = bot_config.get('handle_pings', True)
 
         self._client = Client(room, uri_format, handle_pings, loop=loop)
         self._nick_and_auth = NickAndAuth(self._client, nick)
@@ -54,7 +54,7 @@ class Bot:
         self._services = {}
         self._exit_exc = None
 
-        for name, path in config.items('bot.services'):
+        for name, path in bot_config['services'].items():
             mod = importlib.import_module(path)
             self.add_service_creator(name, mod.main)
 
@@ -63,10 +63,10 @@ class Bot:
         return fmt.format(self._client.room, self._nick_and_auth.desired_nick)
 
     @property
-    def config(self) -> ConfigParser:
-        """Returns the ConfigParser this bot was configured with.
+    def config(self) -> dict:
+        """Returns the dictionary this bot was configured with.
 
-        :rtype: configparser.ConfigParser"""
+        :rtype: dict"""
         return self.config
 
     @property
@@ -169,12 +169,11 @@ class Bot:
                               loop=self._client.loop)
         self.start_all()
 
-async def main(config_file='config.ini', loop=None):
+async def main(config_file='bot.yaml', loop=None):
     """Run a Bot with restarts.
 
     This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_."""
-    config = ConfigParser()
-    config.read_file(open(config_file))
+    config = yaml.load(open(config_file).read())
     tries = 0
     while True:
         bot = None
@@ -197,7 +196,6 @@ async def main(config_file='config.ini', loop=None):
 
 
 if __name__ == '__main__':
-    import yaml
     logging.config.dictConfig(yaml.load(open('logging.yaml').read()))
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main(loop=loop))

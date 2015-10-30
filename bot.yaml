@@ -1,0 +1,8 @@
+bot:
+  room: test
+  nick: euphoria-py
+  services:
+    quitter: euphoria.services.quitter
+    nick_change: euphoria.services.nick_change
+    alloc: euphoria.services.alloc
+    reminder: euphoria.services.reminder
