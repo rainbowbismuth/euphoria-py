@@ -8,18 +8,25 @@ handlers:
     level: DEBUG
     formatter: simple
     stream: ext://sys.stdout
+  rotate_log:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: simple
+    filename: 'bot.log'
+    maxBytes: 67108864
+    backupCount: 3
 loggers:
   euphoria.state_machines.nick_and_auth:
     level: DEBUG
-    handlers: [console]
+    handlers: [console, rotate_log]
     propagate: no
   euphoria.client:
-    level: INFO
-    handlers: [console]
+    level: DEBUG
+    handlers: [rotate_log]
     propagate: no
   euphoria.bot:
-    level: DEBUG
-    handlers: [console]
+    level: INFO
+    handlers: [console, rotate_log]
     propagate: no
 root:
   level: INFO

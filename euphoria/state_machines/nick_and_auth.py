@@ -77,6 +77,7 @@ class NickAndAuth:
     def _try_new_nick(self):
         self._nick_failure.clear()
         if self.nick_is_desired():
+            logger.debug("%s: nick is desired! spawning _nick_notifier", self)
             # Notify everyone who was waiting for the new nickname.
             asyncio.ensure_future(self._nick_notifier(), loop=self._loop)
         else:
@@ -84,6 +85,8 @@ class NickAndAuth:
             # spawn a new task to set it.
             if self._nick_setter:
                 return
+            logger.debug("%s: nick isn't desired, spawning _nick_setter_task",
+                         self)
             self._nick_setter = asyncio.ensure_future(self._nick_setter_task(),
                                                       loop=self._loop)
 
