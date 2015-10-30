@@ -20,6 +20,14 @@ euphoria.services.nick_change module
     :undoc-members:
     :show-inheritance:
 
+euphoria.services.reminder module
+------------------------------------
+
+.. automodule:: euphoria.services.reminder
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 euphoria.services.quitter module
 --------------------------------
 

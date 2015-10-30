@@ -28,8 +28,7 @@ async def chill_and_respond(client: Client, length: int, msg: str):
 async def main(bot: Bot):
     """Entry point into the '!remind' service.
 
-    # coroutines>`_.
-    This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html
+    This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
 
     :param euphoria.Bot bot: This service's bot"""
     minute_re = re.compile("!remind (\d+)m (.*)")
