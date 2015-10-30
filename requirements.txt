@@ -1,1 +1,2 @@
 websockets>=2.6
+PyYAML>=3.11

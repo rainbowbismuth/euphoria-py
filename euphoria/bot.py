@@ -20,6 +20,7 @@ from .client import *
 from .state_machines import NickAndAuth
 import asyncio
 import logging
+import logging.config
 import importlib
 from configparser import ConfigParser
 
@@ -196,7 +197,8 @@ async def main(config_file='config.ini', loop=None):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    import yaml
+    logging.config.dictConfig(yaml.load(open('logging.yaml').read()))
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main(loop=loop))
     tasks = asyncio.Task.all_tasks(loop=loop)
