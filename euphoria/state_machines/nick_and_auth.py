@@ -19,10 +19,7 @@
 import asyncio
 import logging
 
-from ..client import *
-from ..data import *
-from ..exceptions import *
-from ..stream import *
+from euphoria import Client, HelloEvent, BounceEvent, Stream, ErrorResponse
 
 logger = logging.getLogger(__name__)
 
@@ -266,7 +263,7 @@ class NickAndAuth:
                     if self.auth_failed:
                         logger.debug("%s: auth failed, can't try again", self)
                         continue
-                    if not "passcode" in packet.data.auth_options:
+                    if "passcode" not in packet.data.auth_options:
                         logger.error("%s: no passcode method", self)
                         self._auth_failure.set()
                         continue

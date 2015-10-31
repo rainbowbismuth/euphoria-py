@@ -18,7 +18,7 @@
 
 from typing import Any, List
 
-from .exceptions import *
+from .exceptions import ErrorResponse
 
 
 class Packet:

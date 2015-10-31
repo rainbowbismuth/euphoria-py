@@ -20,13 +20,12 @@ import asyncio
 import json
 import logging
 import weakref
-from asyncio import Future
+from asyncio import Future, AbstractEventLoop
 from typing import Tuple
 
 import websockets
 
-from .data import *
-from .stream import *
+from euphoria import Stream, Packet, PingEvent
 
 logger = logging.getLogger(__name__)
 
@@ -37,11 +36,11 @@ class Client:
     """A websocket client for Euphoria.
 
     :param str room: The room the client should join when started
-    :param asyncio.BaseEventLoop loop: The asyncio event loop you want to use
+    :param asyncio.AbstractEventLoop loop: The asyncio event loop you want to use
     """
 
     def __init__(self, room: str, uri_format: str = EUPHORIA_URL,
-                 handle_pings: bool = True, loop: BaseEventLoop = None):
+                 handle_pings: bool = True, loop: AbstractEventLoop = None):
         self._handle_pings = handle_pings
         self._incoming = asyncio.Queue(loop=loop)
         self._outgoing = asyncio.Queue(loop=loop)
@@ -78,10 +77,10 @@ class Client:
         return self._uri
 
     @property
-    def loop(self) -> BaseEventLoop:
+    def loop(self) -> AbstractEventLoop:
         """The asyncio event loop this client uses.
 
-        :rtype: asyncio.BaseEventLoop"""
+        :rtype: asyncio.AbstractEventLoop"""
         return self._loop
 
     @property

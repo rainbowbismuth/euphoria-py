@@ -23,7 +23,7 @@ import logging.config
 
 import yaml
 
-from .client import *
+from .client import Client, EUPHORIA_URL
 from .state_machines import NickAndAuth
 
 logger = logging.getLogger(__name__)
@@ -122,10 +122,10 @@ class Bot:
     """A high-level bot for euphoria.
 
     :param euphoria.BotConfig config: Bot configuration
-    :param asyncio.BaseEventLoop loop: The asyncio event loop you want to use
+    :param asyncio.AbstractEventLoop loop: The asyncio event loop you want to use
     """
 
-    def __init__(self, config: BotConfig, loop: asyncio.BaseEventLoop = None):
+    def __init__(self, config: BotConfig, loop: asyncio.AbstractEventLoop = None):
         self._config = config
         self._client = Client(config.room, config.uri_format, config.handle_pings, loop=loop)
         self._nick_and_auth = NickAndAuth(self._client, config.nick)
@@ -250,7 +250,7 @@ class Bot:
         self.start_all()
 
 
-async def main(config_file: str = 'bot.yml', loop: asyncio.BaseEventLoop = None):
+async def main(config_file: str = 'bot.yml', loop: asyncio.AbstractEventLoop = None):
     """Run a Bot with restarts.
 
     This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_."""
