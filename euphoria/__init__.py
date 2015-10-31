@@ -22,7 +22,7 @@ from .bot import *
 from .stream import *
 from .client import *
 
-__all__ = ['Client', 'Stream', 'Bot', 'EuphoriaException', 'ErrorResponse',
+__all__ = ['Client', 'Stream', 'Bot', 'BotConfig', 'EuphoriaException', 'ErrorResponse',
            'Packet', 'HelloEvent',
            'PingEvent', 'BounceEvent', 'AuthReply', 'SnapshotEvent',
            'NickEvent', 'NickReply', 'Message', 'SendEvent', 'SendReply',

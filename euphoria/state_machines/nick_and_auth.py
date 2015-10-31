@@ -250,9 +250,10 @@ class NickAndAuth:
                 packet = await stream.any()
 
                 if packet.is_type(HelloEvent):
+                    logger.debug("%s: received HelloEvent", self)
                     name = packet.data.session.name
-                    self._set_current_nick(name)
                     await self._set_authorized(not packet.data.room_is_private)
+                    self._set_current_nick(name)
 
                 elif packet.is_type(BounceEvent):
                     self._set_current_nick("")
