@@ -16,14 +16,16 @@
 
 """Nickname and authentication state machines."""
 
-from ..client import *
-from ..stream import *
-from ..data import *
-from ..exceptions import *
 import asyncio
 import logging
 
+from ..client import *
+from ..data import *
+from ..exceptions import *
+from ..stream import *
+
 logger = logging.getLogger(__name__)
+
 
 # TODO: Take care of this detail: "the server may modify the requested nick."
 

@@ -15,10 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
+import logging
 
 import euphoria
 from euphoria.state_machines import NickAndAuth
-import logging
 
 logging.basicConfig(level=logging.INFO)
 
@@ -28,6 +28,7 @@ client = euphoria.Client(input("room name> "), loop=loop)
 
 nick_and_auth = NickAndAuth(client, "nick_and_auth_client")
 nick_and_auth.passcode = input("passcode> ")
+
 
 async def send_event_loop():
     stream = await client.stream()
@@ -45,6 +46,7 @@ async def send_event_loop():
 
         elif send_event.data.content[0:5] == "!nick":
             nick_and_auth.desired_nick = send_event.data.content[6:]
+
 
 loop.create_task(nick_and_auth.start())
 loop.create_task(send_event_loop())

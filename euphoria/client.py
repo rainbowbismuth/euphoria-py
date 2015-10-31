@@ -17,13 +17,14 @@
 """Contains the class that lets you connect to an euphoria server"""
 
 import asyncio
-from asyncio import BaseEventLoop, Future
-import websockets
 import json
 import logging
 import weakref
+from asyncio import Future
 from typing import Tuple
-from .exceptions import *
+
+import websockets
+
 from .data import *
 from .stream import *
 
@@ -39,8 +40,8 @@ class Client:
     :param asyncio.BaseEventLoop loop: The asyncio event loop you want to use
     """
 
-    def __init__(self, room: str, uri_format: str=EUPHORIA_URL,
-                 handle_pings: bool=True, loop: BaseEventLoop=None):
+    def __init__(self, room: str, uri_format: str = EUPHORIA_URL,
+                 handle_pings: bool = True, loop: BaseEventLoop = None):
         self._handle_pings = handle_pings
         self._incoming = asyncio.Queue(loop=loop)
         self._outgoing = asyncio.Queue(loop=loop)
@@ -296,7 +297,7 @@ class Client:
                                               {"type": "passcode",
                                                "passcode": passcode})
 
-    def send(self, content: str, parent: str=None) -> Future:
+    def send(self, content: str, parent: str = None) -> Future:
         """Sends a send command to the server.
 
         :param str content: The message you want this Client to say to the room

@@ -18,6 +18,7 @@
 
 from euphoria import SendEvent, Bot
 
+
 async def main(bot: Bot):
     """Entry point into the !nick' service.
 

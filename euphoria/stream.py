@@ -17,9 +17,9 @@
 """Contains a class that makes it easy to process streams of packets"""
 
 import asyncio
-from asyncio import BaseEventLoop
 import inspect
-from .exceptions import *
+from asyncio import BaseEventLoop
+
 from .data import Packet
 
 
@@ -28,7 +28,7 @@ class Stream:
 
     :param asyncio.BaseEventLoop loop: The asyncio event loop you want to use"""
 
-    def __init__(self, loop: BaseEventLoop=None):
+    def __init__(self, loop: BaseEventLoop = None):
         self._loop = loop
         self._client_open = True
         self._queue = asyncio.Queue(loop=loop)

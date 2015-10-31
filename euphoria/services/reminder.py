@@ -16,14 +16,17 @@
 
 """Say '!remind 15m eat food' to be reminded in 15 minutes to eat food"""
 
-from euphoria import SendEvent, Bot, Client
 import asyncio
 import re
+
+from euphoria import SendEvent, Bot, Client
+
 
 async def chill_and_respond(client: Client, length: int, msg: str):
     await asyncio.sleep(length, loop=client.loop)
     if not client.closed:
         await client.send(msg)
+
 
 async def main(bot: Bot):
     """Entry point into the '!remind' service.

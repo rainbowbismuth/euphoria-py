@@ -25,4 +25,4 @@ setup(name='euphoria-py',
       author_email='emily.a.bellows@gmail.com',
       url='https://github.com/rainbowbismuth/euphoria-py',
       packages=['euphoria'],
-     )
+      )

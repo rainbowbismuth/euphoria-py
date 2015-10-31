@@ -16,8 +16,10 @@
 
 """Say '!quit' to call sys.exit() and shutdown"""
 
-from euphoria import SendEvent, Bot
 import sys
+
+from euphoria import SendEvent, Bot
+
 
 async def main(bot: Bot):
     """Entry point into the '!quit' service.

@@ -17,6 +17,7 @@
 """Contains all the different types you may receive from the euphoria server"""
 
 from typing import Any, List
+
 from .exceptions import *
 
 
@@ -89,7 +90,6 @@ class Packet:
 
 
 class SessionViewBased:
-
     def __init__(self, j: dict):
         self._id = j['id']
         self._name = j['name']
@@ -154,7 +154,6 @@ class SessionView(SessionViewBased):
 
 
 class MessageBased:
-
     def __init__(self, j: dict):
         self._id = j['id']
         self._edit_id = j.get('edit_id', None)
@@ -432,7 +431,6 @@ class SnapshotEvent:
 
 
 class NetworkEvent:
-
     def __init__(self, j: dict):
         self._type = j['type']
         self._server_id = j['server_id']
@@ -461,7 +459,6 @@ class NetworkEvent:
 
 
 class NickBased:
-
     def __init__(self, j: dict):
         self._session_id = j['session_id']
         self._id = j['id']
@@ -526,6 +523,7 @@ class JoinEvent(SessionViewBased):
 
 class PartEvent(SessionViewBased):
     """A PartEvent indicates a session just disconnected from the room."""
+
 
 DATA_TYPES = {'hello-event': HelloEvent,
               'snapshot-event': SnapshotEvent,

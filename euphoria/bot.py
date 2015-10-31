@@ -16,13 +16,15 @@
 
 """A high-level easy to use bot interface."""
 
-from .client import *
-from .state_machines import NickAndAuth
 import asyncio
+import importlib
 import logging
 import logging.config
-import importlib
+
 import yaml
+
+from .client import *
+from .state_machines import NickAndAuth
 
 logger = logging.getLogger(__name__)
 

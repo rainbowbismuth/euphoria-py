@@ -15,8 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-import euphoria
 import logging
+
+import euphoria
 
 logging.basicConfig(level=logging.INFO)
 
@@ -24,6 +25,7 @@ loop = asyncio.get_event_loop()
 room = input("room name> ")
 passcode = input("passcode> ")
 bot = euphoria.Client(room, loop=loop)
+
 
 async def main_task():
     stream = await bot.stream()
@@ -34,6 +36,7 @@ async def main_task():
         await authenticate()
     except asyncio.CancelledError:
         logging.info("We're done here")
+
 
 async def authenticate():
     auth_reply = await bot.send_auth(passcode)
@@ -53,6 +56,7 @@ async def authenticate():
     logging.info("Nick set")
     await send_event_loop()
 
+
 async def send_event_loop():
     stream = await bot.stream()
     while True:
@@ -62,6 +66,7 @@ async def send_event_loop():
         if send_event.data.content == "!quit":
             bot.close()
             return
+
 
 loop.create_task(main_task())
 loop.run_until_complete(bot.start())

@@ -16,10 +16,11 @@
 
 """Say '!alloc' to see some neat memory statistics"""
 
-from euphoria import SendEvent, Bot
-import tracemalloc
 import linecache
 import os
+import tracemalloc
+
+from euphoria import SendEvent, Bot
 
 tracemalloc.start()
 
@@ -52,6 +53,7 @@ def display_top(snapshot, group_by='lineno', limit=10):
     total = sum(stat.size for stat in top_stats)
     lines.append("Total allocated size: %.1f KiB" % (total / 1024))
     return '\n'.join(lines)
+
 
 async def main(bot: Bot):
     """Entry point into the '!alloc' service.

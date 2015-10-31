@@ -16,12 +16,6 @@
 
 """Euphoria client and bot library, for Python 3.5"""
 
-from .exceptions import *
-from .data import *
-from .bot import *
-from .stream import *
-from .client import *
-
 __all__ = ['Client', 'Stream', 'Bot', 'BotConfig', 'EuphoriaException', 'ErrorResponse',
            'Packet', 'HelloEvent',
            'PingEvent', 'BounceEvent', 'AuthReply', 'SnapshotEvent',
