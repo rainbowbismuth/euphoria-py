@@ -26,6 +26,7 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
+
 # TODO: Add closed property? and wait until closed? + started etc?
 # TODO: Add Ctrl-C handler, see https://github.com/rainbowbismuth/euphoria-py/issues/4
 # TODO: What am I doing with _exit_exc?
@@ -40,7 +41,7 @@ class BotConfig:
     :param str filename: A path to a YAML file containing the config options
     """
 
-    def __init__(self, dictionary: dict=None, filename: str=None):
+    def __init__(self, dictionary: dict = None, filename: str = None):
         if filename:
             assert dictionary is None
             with open(filename) as f:
@@ -122,7 +123,7 @@ class Bot:
     :param asyncio.BaseEventLoop loop: The asyncio event loop you want to use
     """
 
-    def __init__(self, config: BotConfig, loop: asyncio.BaseEventLoop=None):
+    def __init__(self, config: BotConfig, loop: asyncio.BaseEventLoop = None):
         self._config = config
         self._client = Client(config.room, config.uri_format, config.handle_pings, loop=loop)
         self._nick_and_auth = NickAndAuth(self._client, config.nick)
@@ -241,13 +242,13 @@ class Bot:
 
     def start(self):
         """Start the bot."""
-        asyncio.ensure_future(self._client.start(), loop=self._client.loop)
         asyncio.ensure_future(self._nick_and_auth.start(),
                               loop=self._client.loop)
+        asyncio.ensure_future(self._client.start(), loop=self._client.loop)
         self.start_all()
 
 
-async def main(config_file: str='bot.yml', loop: asyncio.BaseEventLoop=None):
+async def main(config_file: str = 'bot.yml', loop: asyncio.BaseEventLoop = None):
     """Run a Bot with restarts.
 
     This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_."""
