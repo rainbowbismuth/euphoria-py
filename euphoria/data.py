@@ -21,7 +21,7 @@ from .exceptions import *
 
 
 class Packet:
-    """A message recieved from Euphoria"""
+    """A message received from Euphoria"""
 
     def __init__(self, j: dict):
         self._id = j.get('id', None)
@@ -34,9 +34,10 @@ class Packet:
         self._throttled = j.get('throttled', False)
         self._throttled_reason = j.get('throttled_reason', None)
 
-    def is_type(self, type_: str) -> bool:
+    def is_type(self, type_: type) -> bool:
         """Returns whether or not this packet contains data of the given type.
 
+        :param type type_: The type to check for
         :rtype: bool"""
         return isinstance(self._data, type_)
 

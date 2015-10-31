@@ -18,7 +18,7 @@
 
 
 class EuphoriaException(Exception):
-    """A baseclass for euphoria-py exceptions."""
+    """A base class for euphoria-py exceptions."""
     pass
 
 

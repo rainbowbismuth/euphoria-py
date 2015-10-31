@@ -241,11 +241,11 @@ class Client:
 
     def _next_id_and_future(self) -> Tuple[str, Future]:
         # Generate a new ID to put into a message we are about to send, and
-        # a corresponding future to recieve the eventual reply from the server.
+        # a corresponding future to receive the eventual reply from the server.
         id_ = str(self._next_msg_id)
         future = asyncio.Future()
         self._reply_map[id_] = future
-        return (id_, future)
+        return id_, future
 
     def _take_reply_future(self, id_: str) -> Future:
         # If there is a future for this ID, then we retrieve it and remove it

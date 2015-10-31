@@ -26,9 +26,9 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-#TODO: Add closed property? and wait until closed? + started etc?
-#TODO: Add Ctrl-C handler, see https://github.com/rainbowbismuth/euphoria-py/issues/4
-#TODO: What am I doing with _exit_exc?
+# TODO: Add closed property? and wait until closed? + started etc?
+# TODO: Add Ctrl-C handler, see https://github.com/rainbowbismuth/euphoria-py/issues/4
+# TODO: What am I doing with _exit_exc?
 
 class Bot:
     """A high-level bot for euphoria.
@@ -137,7 +137,7 @@ class Bot:
         return name in self._services
 
     def get_service(self, name: str) -> asyncio.Task:
-        """Retrives a service's task.
+        """Retrieves a service's task.
 
         :param str name: The name of the service to get
         :rtype: asyncio.Task"""
