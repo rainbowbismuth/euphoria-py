@@ -16,9 +16,16 @@
 
 """Euphoria client and bot library, for Python 3.5"""
 
-__all__ = ['Client', 'Stream', 'Bot', 'BotConfig', 'EuphoriaException', 'ErrorResponse',
-           'Packet', 'HelloEvent',
-           'PingEvent', 'BounceEvent', 'AuthReply', 'SnapshotEvent',
-           'NickEvent', 'NickReply', 'Message', 'SendEvent', 'SendReply',
-           'SessionView', 'JoinEvent', 'PartEvent', 'NetworkEvent',
-           'EditMessageEvent']
+# noinspection PyUnresolvedReferences
+from .exceptions import EuphoriaException, ErrorResponse
+# noinspection PyUnresolvedReferences
+from .data import Packet, SessionView, Message, SendEvent, SnapshotEvent, JoinEvent, HelloEvent, BounceEvent, PingEvent, \
+    NetworkEvent, NickEvent, SendReply, NickReply
+# noinspection PyUnresolvedReferences
+from .stream import Stream
+# noinspection PyUnresolvedReferences
+from .client import Client
+# noinspection PyUnresolvedReferences
+from .bot import Bot, BotConfig
+
+__all__ = ['exceptions', 'data', 'stream', 'client', 'bot']

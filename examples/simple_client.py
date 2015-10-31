@@ -18,6 +18,7 @@ import asyncio
 import logging
 
 import euphoria
+from euphoria.client import Client
 
 logging.basicConfig(level=logging.INFO)
 
