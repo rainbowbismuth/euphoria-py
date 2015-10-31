@@ -7,4 +7,4 @@ API is expected to undergo major additions currently.
 
 [Documentation](http://rainbowbismuth.github.io/euphoria-py/docs/)
 
-:zap:<br>`python3 -m euphoria.bot`
+:zap: `python3 -m euphoria.bot`
