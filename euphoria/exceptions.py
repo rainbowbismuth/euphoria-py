@@ -16,6 +16,7 @@
 
 """A collection of exceptions this library may throw at you"""
 
+
 class EuphoriaException(Exception):
     """A baseclass for euphoria-py exceptions."""
     pass
