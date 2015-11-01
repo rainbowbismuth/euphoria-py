@@ -38,19 +38,18 @@ async def main(bot: Bot):
     client = bot.client
     stream = client.stream()
     while True:
-        send_event = await stream.skip_until(SendEvent)
-        content = send_event.data.content
-        name = send_event.data.sender.name
-        id_ = send_event.data.id
-        if content.startswith("!remind"):
-            match = minute_re.match(content)
+        packet = await stream.skip_until(SendEvent)
+        send_event = packet.send_event
+
+        if send_event.content.startswith("!remind"):
+            match = minute_re.match(send_event.content)
             if match:
                 minutes = float(match.group(1))
-                msg = "reminder @{0}: {1}".format(name, match.group(2))
+                msg = "reminder @{0}: {1}".format(send_event.sender.name, match.group(2))
                 asyncio.ensure_future(chill_and_respond(client,
                                                         minutes * 60, msg))
-                await client.send("acknowledged!", parent=id_)
+                await client.send("acknowledged!", parent=send_event.id)
             else:
-                await client.send("usage: !remind 15m go on a walk", parent=id_)
+                await client.send("usage: !remind 15m go on a walk", parent=send_event.id)
         else:
             continue

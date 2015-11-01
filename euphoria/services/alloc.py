@@ -64,8 +64,9 @@ async def main(bot: Bot):
     client = bot.client
     stream = client.stream()
     while True:
-        send_event = await stream.skip_until(SendEvent)
-        if send_event.data.content.startswith("!alloc"):
+        packet = await stream.skip_until(SendEvent)
+        send_event = packet.send_event
+        if send_event.content.startswith("!alloc"):
             snapshot = tracemalloc.take_snapshot()
             line = display_top(snapshot)
-            client.send(line, parent=send_event.data.id)
+            client.send(line, parent=send_event.id)

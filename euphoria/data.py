@@ -23,76 +23,6 @@ __all__ = ['Packet', 'SessionView', 'Message', 'SendEvent', 'SnapshotEvent', 'Jo
            'PingEvent', 'NetworkEvent', 'NickEvent', 'SendReply', 'NickReply']
 
 
-class Packet:
-    """A message received from Euphoria"""
-
-    __slots__ = ['_id', '_type', '_data', '_error', '_throttled', '_throttled_reason']
-
-    def __init__(self, j: dict):
-        self._id = j.get('id', None)
-        self._type = j['type']
-        if j.get('data', None):
-            self._data = DATA_TYPES[self.type](j['data'])
-        else:
-            self._data = None
-        self._error = j.get('error', None)
-        self._throttled = j.get('throttled', False)
-        self._throttled_reason = j.get('throttled_reason', None)
-
-    def is_type(self, type_: type) -> bool:
-        """Returns whether or not this packet contains data of the given type.
-
-        :param type_: The type to check for
-        :rtype: bool"""
-        return isinstance(self._data, type_)
-
-    @property
-    def id(self) -> str:
-        """Client-generated ID that associates replies with commands. Will be
-        None if this Packet isn't in response to a command.
-
-        :rtype: str"""
-        return self._id
-
-    @property
-    def type(self) -> str:
-        """A string name of the type of data associated with this Packet.
-
-        :rtype: str"""
-        return self._type
-
-    @property
-    def data(self) -> Any:
-        """Returns the data part of the Packet.
-
-        :raises euphoria.ErrorResponse: if this Packet contains an error."""
-        if self.error:
-            raise ErrorResponse(self.error)
-        return self._data
-
-    @property
-    def error(self) -> str:
-        """An error message if a command fails. None otherwise.
-
-        :rtype: str"""
-        return self._error
-
-    @property
-    def throttled(self) -> bool:
-        """This appears true in replies to warn the client that it may be
-        flooding commands.
-
-        :rtype: bool"""
-        return self._throttled
-
-    @property
-    def throttled_reason(self) -> str:
-        """If Packet.throttled is true, then this is a string describing why.
-
-        :rtype: str"""
-        return self._throttled_reason
-
-
 class SessionViewBased:
     __slots__ = ['_id', '_name', '_server_id', '_server_era', '_session_id', '_is_staff', '_is_manager']
 
@@ -546,6 +476,141 @@ class JoinEvent(SessionViewBased):
 
 class PartEvent(SessionViewBased):
     """A PartEvent indicates a session just disconnected from the room."""
+
+
+class Packet:
+    """A message received from Euphoria"""
+
+    __slots__ = ['_id', '_type', '_data', '_error', '_throttled', '_throttled_reason']
+
+    def __init__(self, j: dict):
+        self._id = j.get('id', None)
+        self._type = j['type']
+        if j.get('data', None):
+            self._data = DATA_TYPES[self.type](j['data'])
+        else:
+            self._data = None
+        self._error = j.get('error', None)
+        self._throttled = j.get('throttled', False)
+        self._throttled_reason = j.get('throttled_reason', None)
+
+    def is_type(self, type_: type) -> bool:
+        """Returns whether or not this packet contains data of the given type.
+
+        :param type_: The type to check for
+        :rtype: bool"""
+        return isinstance(self._data, type_)
+
+    @property
+    def id(self) -> str:
+        """Client-generated ID that associates replies with commands. Will be
+        None if this Packet isn't in response to a command.
+
+        :rtype: str"""
+        return self._id
+
+    @property
+    def type(self) -> str:
+        """A string name of the type of data associated with this Packet.
+
+        :rtype: str"""
+        return self._type
+
+    @property
+    def data(self) -> Any:
+        """Returns the data part of the Packet.
+
+        :raises euphoria.ErrorResponse: if this Packet contains an error."""
+        if self.error:
+            raise ErrorResponse(self.error)
+        return self._data
+
+    @property
+    def error(self) -> str:
+        """An error message if a command fails. None otherwise.
+
+        :rtype: str"""
+        return self._error
+
+    @property
+    def throttled(self) -> bool:
+        """This appears true in replies to warn the client that it may be
+        flooding commands.
+
+        :rtype: bool"""
+        return self._throttled
+
+    @property
+    def throttled_reason(self) -> str:
+        """If Packet.throttled is true, then this is a string describing why.
+
+        :rtype: str"""
+        return self._throttled_reason
+
+    @property
+    def hello_event(self) -> HelloEvent:
+        if self.is_type(HelloEvent):
+            return self.data
+
+    @property
+    def snapshot_event(self) -> SnapshotEvent:
+        if self.is_type(SnapshotEvent):
+            return self.data
+
+    @property
+    def ping_event(self) -> PingEvent:
+        if self.is_type(PingEvent):
+            return self.data
+
+    @property
+    def bounce_event(self) -> BounceEvent:
+        if self.is_type(BounceEvent):
+            return self.data
+
+    @property
+    def auth_reply(self) -> AuthReply:
+        if self.is_type(AuthReply):
+            return self.data
+
+    @property
+    def network_event(self) -> NetworkEvent:
+        if self.is_type(NetworkEvent):
+            return self.data
+
+    @property
+    def nick_event(self) -> NetworkEvent:
+        if self.is_type(NickEvent):
+            return self.data
+
+    @property
+    def nick_reply(self) -> NickReply:
+        if self.is_type(NickReply):
+            return self.data
+
+    @property
+    def send_event(self) -> SendEvent:
+        if self.is_type(SendEvent):
+            return self.data
+
+    @property
+    def edit_message_event(self) -> EditMessageEvent:
+        if self.is_type(EditMessageEvent):
+            return self.data
+
+    @property
+    def send_reply(self) -> SendReply:
+        if self.is_type(SendReply):
+            return self.data
+
+    @property
+    def join_event(self) -> JoinEvent:
+        if self.is_type(JoinEvent):
+            return self.join_event
+
+    @property
+    def part_event(self) -> PartEvent:
+        if self.is_type(PartEvent):
+            return self.part_event
 
 
 DATA_TYPES = {'hello-event': HelloEvent,

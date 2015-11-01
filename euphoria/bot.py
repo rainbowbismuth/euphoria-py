@@ -131,8 +131,7 @@ class Bot:
     def __init__(self, config: BotConfig, loop: asyncio.AbstractEventLoop = None):
         self._config = config
         self._client = Client(config.room, config.uri_format, config.handle_pings, loop=loop)
-        self._nick_and_auth = NickAndAuth(self._client, config.nick)
-        self._nick_and_auth.passcode = config.passcode
+        self._nick_and_auth = NickAndAuth(self._client, config.nick, config.passcode)
         self._service_creators = {}
         self._services = {}
         self._exit_exc = None
@@ -255,18 +254,15 @@ class Bot:
     def close(self):
         """Close the bot."""
         logger.info("%s closing", self)
-        self._nick_and_auth.close()
         self._client.close()
         self.stop_all()
 
     async def start(self):
         """Start the bot."""
         self._start_time = datetime.datetime.now()
-        asyncio.ensure_future(self._nick_and_auth.start(),
-                              loop=self._client.loop)
-        await self._nick_and_auth.wait_until_started()
         self.start_all()
-        asyncio.ensure_future(self._client.start(), loop=self._client.loop)
+        await self._client.start()
+        self.close()
 
 
 async def main(config_file: str = 'bot.yml', loop: asyncio.AbstractEventLoop = None):
@@ -274,27 +270,18 @@ async def main(config_file: str = 'bot.yml', loop: asyncio.AbstractEventLoop = N
 
     This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_."""
     config = BotConfig(filename=config_file)
-    tries = 0
-    while True:
-        bot = None
+    sys_exit = False
+    while not sys_exit:
         try:
             bot = Bot(config, loop=loop)
             await bot.start()
-            await bot.client.wait_until_closed()
-        except asyncio.CancelledError:
-            pass
-        except SystemExit as exc:
-            bot._exit_exc = exc
-            bot.close()
-        except:
-            logger.error("%s bot crashed", bot, exc_info=True)
-            tries += 1
-            if tries > 5:
-                break
-        finally:
             if not bot._request_restart:
                 break
-
+        except:
+            logger.error("%s: bot crashed", bot, exc_info=True)
+        finally:
+            if bot._exit_exc:
+                sys_exit = True
 
 if __name__ == '__main__':
     logging.config.dictConfig(yaml.load(open('logging.yml').read()))

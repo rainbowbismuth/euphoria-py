@@ -36,32 +36,33 @@ async def main(bot: Bot):
     client = bot.client
     stream = client.stream()
     while True:
-        send_event = await stream.skip_until(SendEvent)
+        packet = await stream.skip_until(SendEvent)
+        send_event = packet.send_event
 
-        ping_match = ping_re.match(send_event.data.content)
+        ping_match = ping_re.match(send_event.content)
         if ping_match:
             if not ping_match.group(1) == bot.nick_and_auth.current_nick:
                 continue
-            client.send("pong!", parent=send_event.data.id)
+            client.send("pong!", parent=send_event.id)
             continue
 
-        uptime_match = uptime_re.match(send_event.data.content)
+        uptime_match = uptime_re.match(send_event.content)
         if uptime_match:
             if not uptime_match.group(1) == bot.nick_and_auth.current_nick:
                 continue
             now = datetime.datetime.now()
             diff = now - bot.start_time
             client.send("/me has been up since {0} ({1})".format(bot.start_time.ctime(), str(diff)),
-                        parent=send_event.data.id)
+                        parent=send_event.id)
             continue
 
-        kill_match = kill_re.match(send_event.data.content)
+        kill_match = kill_re.match(send_event.content)
         if kill_match:
             if not kill_match.group(1) == bot.nick_and_auth.current_nick:
                 continue
             sys.exit()
 
-        restart_match = restart_re.match(send_event.data.content)
+        restart_match = restart_re.match(send_event.content)
         if restart_match:
             if not restart_match.group(1) == bot.nick_and_auth.current_nick:
                 continue
