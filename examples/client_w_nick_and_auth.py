@@ -31,7 +31,7 @@ nick_and_auth.passcode = input("passcode> ")
 
 
 async def send_event_loop():
-    stream = await client.stream()
+    stream = client.stream()
     while True:
         await nick_and_auth.wait_for_auth()
 
@@ -48,6 +48,10 @@ async def send_event_loop():
             nick_and_auth.desired_nick = send_event.data.content[6:]
 
 
-loop.create_task(nick_and_auth.start())
-loop.create_task(send_event_loop())
-loop.run_until_complete(client.start())
+async def boot():
+    await nick_and_auth.start()
+    loop.create_task(send_event_loop())
+    await client.start()
+
+
+loop.run_until_complete(boot())

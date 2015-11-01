@@ -18,7 +18,7 @@
 
 import asyncio
 import inspect
-from asyncio import BaseEventLoop
+from asyncio import AbstractEventLoop
 
 from .data import Packet
 
@@ -30,43 +30,68 @@ class Stream:
 
     :param asyncio.BaseEventLoop loop: The asyncio event loop you want to use"""
 
-    def __init__(self, loop: BaseEventLoop = None):
+    def __init__(self, loop: AbstractEventLoop = None):
         self._loop = loop
-        self._client_open = True
+        self._connected = asyncio.Event(loop=loop)
+        self._closed = False
         self._queue = asyncio.Queue(loop=loop)
         self._waiting_on = None
 
+    def _connect(self):
+        if not self._closed:
+            self._connected.set()
+
     def _send(self, packet: Packet) -> None:
         # This is used by Client's receive loop to put an item into the Stream.
+        assert not self._closed
+        assert self._connected.is_set()
         self._queue.put_nowait(packet)
 
     def close(self) -> None:
         """Closes this stream. Will not receive any more messages from the Client."""
-        self._client_open = False
+        self._connected.clear()
+        self._closed = True
         if self._waiting_on:
             # If there's somebody waiting inside a Stream.any() we have to
             # cancel them because no more messages are coming.
             self._waiting_on.cancel()
 
     @property
-    def loop(self) -> BaseEventLoop:
+    def loop(self) -> AbstractEventLoop:
         """The asyncio event loop this Stream uses.
 
         :rtype: asyncio.BaseEventLoop"""
         return self._loop
 
     @property
-    def open(self) -> bool:
+    def connected(self) -> bool:
         """Returns whether this stream can receive messages from the Client.
 
         :rtype: bool"""
-        return self._client_open
+        return self._connected.is_set()
+
+    @property
+    def open(self) -> bool:
+        """Returns whether this stream is connected and not closed.
+
+        :rtype: bool"""
+        return self._connected.is_set() and not self._closed
+
+    @property
+    def closed(self) -> bool:
+        """Returns whether this stream has been closed.
+
+        :rtype: bool"""
+        return self._closed
 
     def empty(self) -> bool:
         """Returns whether or not the Stream is currently empty.
 
         :rtype: bool"""
         return self._queue.empty()
+
+    async def wait_until_connected(self):
+        await self._connected.wait()
 
     async def any(self) -> Packet:
         """Returns the next message from the Client.
@@ -79,7 +104,9 @@ class Stream:
         # isn't None, then clearly more then one coroutine is using it.
         assert self._waiting_on is None
 
-        if not self._client_open:
+        await self.wait_until_connected()
+
+        if self._closed:
             raise asyncio.CancelledError
 
         self._waiting_on = asyncio.ensure_future(

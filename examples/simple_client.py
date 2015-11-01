@@ -18,7 +18,6 @@ import asyncio
 import logging
 
 import euphoria
-from euphoria.client import Client
 
 logging.basicConfig(level=logging.INFO)
 
@@ -29,8 +28,8 @@ bot = euphoria.Client(room, loop=loop)
 
 
 async def main_task():
-    stream = await bot.stream()
-    hello = await stream.skip_until(euphoria.HelloEvent)
+    stream = bot.stream()
+    await stream.skip_until(euphoria.HelloEvent)
     logging.info("We're connected, hello-event received!")
 
     try:
@@ -59,7 +58,7 @@ async def authenticate():
 
 
 async def send_event_loop():
-    stream = await bot.stream()
+    stream = bot.stream()
     while True:
         send_event = await stream.skip_until(euphoria.SendEvent)
         logging.info("{0}: {1}".format(

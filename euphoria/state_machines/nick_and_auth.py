@@ -234,7 +234,7 @@ class NickAndAuth:
         assert not self.closed
 
         self._started.set()
-        stream = await self._client.stream()
+        stream = self._client.stream()
         try:
             self._task = asyncio.ensure_future(self._main_loop(stream),
                                                loop=self._loop)

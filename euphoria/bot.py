@@ -244,12 +244,14 @@ class Bot:
         self._client.close()
         self.stop_all()
 
-    def start(self):
+    async def start(self):
         """Start the bot."""
         asyncio.ensure_future(self._nick_and_auth.start(),
                               loop=self._client.loop)
-        asyncio.ensure_future(self._client.start(), loop=self._client.loop)
+        await self._nick_and_auth.wait_until_started()
         self.start_all()
+        asyncio.ensure_future(self._client.start(), loop=self._client.loop)
+
 
 
 async def main(config_file: str = 'bot.yml', loop: asyncio.AbstractEventLoop = None):
@@ -262,7 +264,7 @@ async def main(config_file: str = 'bot.yml', loop: asyncio.AbstractEventLoop = N
         bot = None
         try:
             bot = Bot(config, loop=loop)
-            bot.start()
+            await bot.start()
             await bot.client.wait_until_closed()
         except asyncio.CancelledError:
             pass

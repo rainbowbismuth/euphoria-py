@@ -36,7 +36,7 @@ async def main(bot: Bot):
     :param euphoria.Bot bot: This service's bot"""
     minute_re = re.compile("!remind (\d+)m (.*)")
     client = bot.client
-    stream = await client.stream()
+    stream = client.stream()
     while True:
         send_event = await stream.skip_until(SendEvent)
         content = send_event.data.content

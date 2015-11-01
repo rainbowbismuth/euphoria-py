@@ -159,18 +159,14 @@ class Client:
 
         asyncio.ensure_future(close_task(), loop=self._loop)
 
-    async def stream(self) -> Stream:
+    def stream(self) -> Stream:
         """Returns a Stream of messages to the Client.
-
-        Waits until the Client is connected, then return a stream that gets a
-        full view of all the received messages that aren't replies.
-
-        This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
 
         :rtype: euphoria.Stream"""
         assert not self.closed
-        await self.wait_until_connected()
         stream = Stream(loop=self._loop)
+        if self.connected:
+            stream._connect()
         self._streams.add(stream)
         return stream
 
@@ -189,6 +185,10 @@ class Client:
         self._receiver = asyncio.ensure_future(self._recv_loop(),
                                                loop=self._loop)
         self._connected.set()
+
+        for stream in self._streams:
+            stream._connect()
+
         logger.info("%s connected", self)
 
         try:

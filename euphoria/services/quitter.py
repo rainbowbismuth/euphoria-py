@@ -28,7 +28,7 @@ async def main(bot: Bot):
 
     :param euphoria.Bot bot: This service's bot"""
     client = bot.client
-    stream = await client.stream()
+    stream = client.stream()
     while True:
         send_event = await stream.skip_until(SendEvent)
         if send_event.data.content.startswith("!quit"):
