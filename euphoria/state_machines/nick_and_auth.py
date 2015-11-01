@@ -67,9 +67,17 @@ class NickAndAuth:
         :rtype: str"""
         return self._passcode
 
+    @property
+    def authorized(self) -> bool:
+        """Returns whether or not you're authorized.
+
+        :rtype: bool"""
+        return self._authorized
+
     def set_desired_nick(self, new_nick: str) -> Future:
         """Attempt to set your current_nick to new_nick.
 
+        :param str new_nick: The new nickname you want to try.
         :returns: A future that will contain a string error message on failure, or None.
         :rtype: asyncio.Future"""
         self._desired_nick = new_nick
@@ -93,6 +101,7 @@ class NickAndAuth:
     def set_passcode(self, new_passcode: str) -> Future:
         """Sets your passcode to new_passcode and attempts to authenticate if not already.
 
+        :param str new_passcode: The new passcode you want to try.
         :returns: A future that will contain a string error message on failure, or None.
         :rtype: asyncio.Future"""
         self._passcode = new_passcode
