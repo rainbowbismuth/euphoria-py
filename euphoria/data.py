@@ -26,6 +26,8 @@ __all__ = ['Packet', 'SessionView', 'Message', 'SendEvent', 'SnapshotEvent', 'Jo
 class Packet:
     """A message received from Euphoria"""
 
+    __slots__ = ['_id', '_type', '_data', '_error', '_throttled', '_throttled_reason']
+
     def __init__(self, j: dict):
         self._id = j.get('id', None)
         self._type = j['type']
@@ -92,6 +94,8 @@ class Packet:
 
 
 class SessionViewBased:
+    __slots__ = ['_id', '_name', '_server_id', '_server_era', '_session_id', '_is_staff', '_is_manager']
+
     def __init__(self, j: dict):
         self._id = j['id']
         self._name = j['name']
@@ -156,6 +160,9 @@ class SessionView(SessionViewBased):
 
 
 class MessageBased:
+    __slots__ = ['_id', '_edit_id', '_parent', '_previous_edit_id', '_time', '_sender', '_content',
+                 '_encryption_key_id', '_edited', '_deleted', '_truncated']
+
     def __init__(self, j: dict):
         self._id = j['id']
         self._edit_id = j.get('edit_id', None)
@@ -261,6 +268,8 @@ class HelloEvent:
     started. It includes information about the client's authentication and
     associated identity."""
 
+    __slots__ = ['_id', '_account', '_session', '_account_has_access', '_room_is_private', '_version']
+
     def __init__(self, j: dict):
         self._id = j['id']
         self._account = j.get('account', None)
@@ -318,6 +327,8 @@ class PingEvent:
      back a ping-reply with the same value for the time field as soon as
      possible (or risk disconnection)."""
 
+    __slots__ = ['_time', '_next']
+
     def __init__(self, j: dict):
         self._time = j['time']
         self._next = j['next']
@@ -339,6 +350,8 @@ class PingEvent:
 
 class BounceEvent:
     """A BounceEvent indicates that access to a room is denied."""
+
+    __slots__ = ['_reason', '_auth_options']
 
     def __init__(self, j: dict):
         self._reason = j.get('reason', None)
@@ -364,6 +377,8 @@ class BounceEvent:
 class AuthReply:
     """An AuthReply reports whether the auth command succeeded."""
 
+    __slots__ = ['_success', '_reason']
+
     def __init__(self, j: dict):
         self._success = j['success']
         self._reason = j.get('reason', None)
@@ -386,6 +401,8 @@ class AuthReply:
 class SnapshotEvent:
     """A SnapshotEvent indicates that a session has successfully joined a room.
     It also offers a snapshot of the room's state and recent history."""
+
+    __slots__ = ['_identity', '_session_id', '_version', '_listing', '_log']
 
     def __init__(self, j: dict):
         self._identity = j['identity']
@@ -433,6 +450,8 @@ class SnapshotEvent:
 
 
 class NetworkEvent:
+    __slots__ = ['_type', '_server_id', '_server_era']
+
     def __init__(self, j: dict):
         self._type = j['type']
         self._server_id = j['server_id']
@@ -461,6 +480,8 @@ class NetworkEvent:
 
 
 class NickBased:
+    __slots__ = ['_session_id', '_id', '_from', '_to']
+
     def __init__(self, j: dict):
         self._session_id = j['session_id']
         self._id = j['id']
