@@ -17,8 +17,8 @@
 """Contains a class that makes it easy to process streams of packets"""
 
 import asyncio
-import inspect
 from asyncio import AbstractEventLoop
+from typing import Callable
 
 from .data import Packet
 
@@ -117,37 +117,35 @@ class Stream:
         finally:
             self._waiting_on = None
 
-    async def skip_until(self, condition) -> Packet:
+    async def skip_until_type(self, type_: type) -> Packet:
+        return await self.skip_until(lambda p: p.is_type(type_))
+
+    async def skip_until(self, condition: Callable[[Packet], bool]) -> Packet:
         """Discards messages in this stream until one matches condition.
 
         This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
 
+        :param condition: Skip packets until condition(packet) == True
         :rtype: euphoria.Packet
         :raises asyncio.CancelledError: if the client is closed"""
-        if inspect.isclass(condition):
-            kls = condition
-            # TODO: change this to a def instead of a lambda
-            condition = lambda p: p.data and isinstance(p.data, kls)
-
         while True:
             packet = await self.any()
             if not condition(packet):
                 continue
             return packet
 
-    async def select(self, condition) -> Packet:
+    async def select_type(self, type_: type) -> Packet:
+        return await self.select(lambda p: p.is_type(type_))
+
+    async def select(self, condition: Callable[[Packet], bool]) -> Packet:
         """Finds a message in this stream matching the given condition, without
          discarding the rest of them.
 
          This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
 
+         :param condition: Skip packets until condition(packet) == True
          :rtype: euphoria.Packet
          :raises asyncio.CancelledError: if the client is closed"""
-        if inspect.isclass(condition):
-            kls = condition
-            # TODO: change this to a def instead of a lambda
-            condition = lambda p: p.data and isinstance(p.data, kls)
-
         while True:
             packet = await self.any()
             if not condition(packet):

@@ -29,7 +29,7 @@ async def main(bot: Bot):
     nick_and_auth = bot.nick_and_auth
     stream = client.stream()
     while True:
-        packet = await stream.skip_until(SendEvent)
+        packet = await stream.skip_until_type(SendEvent)
         send_event = packet.send_event
         if send_event.content[0:5] == "!nick":
             error = await nick_and_auth.set_desired_nick(send_event.content[6:])

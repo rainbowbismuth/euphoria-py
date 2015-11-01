@@ -38,7 +38,7 @@ async def main(bot: Bot):
     client = bot.client
     stream = client.stream()
     while True:
-        packet = await stream.skip_until(SendEvent)
+        packet = await stream.skip_until_type(SendEvent)
         send_event = packet.send_event
 
         if send_event.content.startswith("!remind"):
