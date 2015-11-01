@@ -170,9 +170,13 @@ class Bot:
 
     @property
     def start_time(self) -> datetime.date:
+        """Returns the time that the Bot was started.
+
+        :rtype: datetime.date"""
         return self._start_time
 
     def restart(self):
+        """Signals that the Bot should be restarted, and closes it."""
         self._request_restart = True
         self.close()
 

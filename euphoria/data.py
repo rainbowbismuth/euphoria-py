@@ -42,7 +42,7 @@ class Packet:
     def is_type(self, type_: type) -> bool:
         """Returns whether or not this packet contains data of the given type.
 
-        :param type type_: The type to check for
+        :param type_: The type to check for
         :rtype: bool"""
         return isinstance(self._data, type_)
 

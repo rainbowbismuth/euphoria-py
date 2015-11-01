@@ -21,17 +21,17 @@ euphoria.services.nick_change module
     :show-inheritance:
 
 euphoria.services.reminder module
-------------------------------------
+---------------------------------
 
 .. automodule:: euphoria.services.reminder
     :members:
     :undoc-members:
     :show-inheritance:
 
-euphoria.services.quitter module
---------------------------------
+euphoria.services.botrulez module
+---------------------------------
 
-.. automodule:: euphoria.services.quitter
+.. automodule:: euphoria.services.botrulez
     :members:
     :undoc-members:
     :show-inheritance:
