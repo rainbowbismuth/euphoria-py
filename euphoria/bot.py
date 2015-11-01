@@ -20,6 +20,7 @@ import asyncio
 import importlib
 import logging
 import logging.config
+import datetime
 
 import yaml
 
@@ -135,6 +136,8 @@ class Bot:
         self._service_creators = {}
         self._services = {}
         self._exit_exc = None
+        self._start_time = None
+        self._request_restart = False
 
         for name, path in config.services.items():
             mod = importlib.import_module(path)
@@ -164,6 +167,14 @@ class Bot:
 
         :rtype: euphoria.state_machines.NickAndAuth"""
         return self._nick_and_auth
+
+    @property
+    def start_time(self) -> datetime.date:
+        return self._start_time
+
+    def restart(self):
+        self._request_restart = True
+        self.close()
 
     def add_service_creator(self, name: str, f):
         """Add a coroutine creating function that takes a bot under name.
@@ -246,12 +257,12 @@ class Bot:
 
     async def start(self):
         """Start the bot."""
+        self._start_time = datetime.datetime.now()
         asyncio.ensure_future(self._nick_and_auth.start(),
                               loop=self._client.loop)
         await self._nick_and_auth.wait_until_started()
         self.start_all()
         asyncio.ensure_future(self._client.start(), loop=self._client.loop)
-
 
 
 async def main(config_file: str = 'bot.yml', loop: asyncio.AbstractEventLoop = None):
@@ -277,7 +288,8 @@ async def main(config_file: str = 'bot.yml', loop: asyncio.AbstractEventLoop = N
             if tries > 5:
                 break
         finally:
-            break
+            if not bot._request_restart:
+                break
 
 
 if __name__ == '__main__':

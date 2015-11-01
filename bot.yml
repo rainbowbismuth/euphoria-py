@@ -2,7 +2,7 @@ bot:
   room: test
   nick: euphoria-py
   services:
-    quitter: euphoria.services.quitter
+    botrulez: euphoria.services.botrulez
     nick_change: euphoria.services.nick_change
     alloc: euphoria.services.alloc
     reminder: euphoria.services.reminder
