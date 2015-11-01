@@ -16,6 +16,8 @@
 
 """A collection of exceptions this library may throw at you"""
 
+__all__ = ['EuphoriaException', 'ErrorResponse']
+
 
 class EuphoriaException(Exception):
     """A base class for euphoria-py exceptions."""

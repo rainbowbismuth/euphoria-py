@@ -17,8 +17,10 @@
 """Contains all the different types you may receive from the euphoria server"""
 
 from typing import Any, List
-
 from .exceptions import ErrorResponse
+
+__all__ = ['Packet', 'SessionView', 'Message', 'SendEvent', 'SnapshotEvent', 'JoinEvent', 'HelloEvent', 'BounceEvent',
+           'PingEvent', 'NetworkEvent', 'NickEvent', 'SendReply', 'NickReply']
 
 
 class Packet:

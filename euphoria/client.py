@@ -27,6 +27,8 @@ import websockets
 
 from euphoria import Stream, Packet, PingEvent
 
+__all__ = ['Client']
+
 logger = logging.getLogger(__name__)
 
 EUPHORIA_URL = "wss://euphoria.io:443/room/{0}/ws"

@@ -22,6 +22,8 @@ from asyncio import BaseEventLoop
 
 from .data import Packet
 
+__all__ = ['Stream']
+
 
 class Stream:
     """A stream of packets from a single Client.

@@ -26,6 +26,8 @@ import yaml
 from .client import Client, EUPHORIA_URL
 from .state_machines import NickAndAuth
 
+__all__ = ['BotConfig', 'Bot']
+
 logger = logging.getLogger(__name__)
 
 
