@@ -16,7 +16,6 @@
 
 import asyncio
 import logging
-
 from euphoria import Client, NickAndAuth
 
 
@@ -30,6 +29,7 @@ def test_main():
     client.connect()
 
     nick_cell = [nick_and_auth.current_nick]
+
     async def task():
         while nick_and_auth.current_nick != nick_and_auth.desired_nick:
             await asyncio.sleep(0.0)
@@ -42,6 +42,7 @@ def test_main():
     nick_and_auth.exit()  # Exit if it didn't crash
     loop.run_until_complete(asyncio.wait(asyncio.Task.all_tasks(loop=loop)))  # Let everything else shutdown cleanly
     assert nick_cell[0] == nick_and_auth.desired_nick, "after all of this I hope we got to set our nick"
+
 
 if __name__ == '__main__':
     test_main()

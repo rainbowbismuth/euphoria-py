@@ -19,14 +19,13 @@
 import logging
 from asyncio import AbstractEventLoop
 from typing import Optional
-
 from euphoria import Client, Packet
 from tiny_agent import Agent
 
 logger = logging.getLogger(__name__)
 
-
 __all__ = ['NickAndAuth']
+
 
 class NickAndAuth(Agent):
     def __init__(self, client: Client, desired_nick: str, passcode: str = "", loop: AbstractEventLoop = None):

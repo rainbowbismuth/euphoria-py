@@ -21,9 +21,7 @@ import json
 import logging
 from asyncio import Future, AbstractEventLoop, CancelledError
 from typing import Tuple, Optional
-
 import websockets
-
 from euphoria import Packet, PingEvent
 from tiny_agent import Agent
 

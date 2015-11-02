@@ -15,7 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio
-
 from tiny_agent import Agent
 
 
@@ -36,10 +35,12 @@ class Counter(Agent):
 def test_counter():
     loop = asyncio.get_event_loop()
     counter = Counter(loop=loop)
+
     async def task():
         counter.increment()
         counter.increment()
         counter.increment()
         result = await counter.current()
         assert result == 3, "we incremented three times"
+
     loop.run_until_complete(task())

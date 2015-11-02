@@ -16,7 +16,6 @@
 
 import asyncio
 from typing import Optional
-
 from tiny_agent import Agent, SupervisorOneForOne, SupervisorOneForAll, Restart, TooManyRestarts
 
 
@@ -85,6 +84,7 @@ def test_one_for_one_period_failure():
         assert one_for_one.exited, "we're dead because we exploded twice too fast."
 
     loop.run_until_complete(task())
+
 
 class RestartOnly(Agent):
     def __init__(self, loop=None):

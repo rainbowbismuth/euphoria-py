@@ -35,7 +35,7 @@ class TooManyRestarts(Exception):
 
 
 class SupervisorOneForOne(Agent):
-    def __init__(self, period: float=60.0, max_restarts: int=3, loop: AbstractEventLoop=None):
+    def __init__(self, period: float = 60.0, max_restarts: int = 3, loop: AbstractEventLoop = None):
         super(SupervisorOneForOne, self).__init__(loop=loop)
         self._max_restarts = max_restarts
         self._period = period
@@ -81,12 +81,12 @@ class SupervisorOneForOne(Agent):
         self._name_to_agent[name] = new_child
 
     @Agent.call
-    async def get(self, name: str, default: Optional[Agent]=None) -> Optional[Agent]:
+    async def get(self, name: str, default: Optional[Agent] = None) -> Optional[Agent]:
         return self._name_to_agent.get(name, default)
 
 
 class SupervisorOneForAll(Agent):
-    def __init__(self, loop: AbstractEventLoop=None):
+    def __init__(self, loop: AbstractEventLoop = None):
         super(SupervisorOneForAll, self).__init__(loop=loop)
         self._children = {}
         self._agent_to_name = {}
@@ -125,5 +125,5 @@ class SupervisorOneForAll(Agent):
         self._name_to_agent = {}
 
     @Agent.call
-    async def get(self, name: str, default: Optional[Agent]=None) -> Optional[Agent]:
+    async def get(self, name: str, default: Optional[Agent] = None) -> Optional[Agent]:
         return self._name_to_agent.get(name, default)

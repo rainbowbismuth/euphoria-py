@@ -18,7 +18,6 @@
 
 import datetime
 import re
-
 from euphoria import Bot, Packet
 from tiny_agent import Agent
 

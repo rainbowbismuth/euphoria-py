@@ -19,7 +19,6 @@
 import linecache
 import os
 import tracemalloc
-
 from euphoria import Bot, Packet
 from tiny_agent import Agent
 
