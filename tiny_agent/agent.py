@@ -37,7 +37,9 @@ class Agent:
     def send(cls, f):
         def send_wrapper(self: 'Agent', *args, **kwargs) -> None:
             async def do_it():
-                await f(self, *args, **kwargs)
+                result = await f(self, *args, **kwargs)
+                if result is not None:
+                    logger.warning("%s tried to return a result in a @Agent.send method, %s", self, f)
 
             if not self.exited:
                 self._queue.put_nowait(do_it)
