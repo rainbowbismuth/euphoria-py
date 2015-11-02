@@ -21,9 +21,6 @@ from euphoria import Bot, Packet
 from tiny_agent import Agent
 
 
-# Currently only works in a public room w/o hacks.
-
-
 class Service(Agent):
     def __init__(self, bot: Bot):
         super(Service, self).__init__(loop=bot.loop)

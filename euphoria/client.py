@@ -198,38 +198,6 @@ class Client(Agent):
     def send_get_message(self, id_: str) -> Future:
         """Sends a get-message command to the server.
 
-        :returns: A future that would contain a :py:class:`euphoria.GetMessageReply`, if it wasn't for a hack
+        :returns: A future that would contain a :py:class:`euphoria.GetMessageReply`
         :rtype: asyncio.Future"""
-        # TODO: HUGE HACK / WORK AROUND
-        cheating_id_int = base36decode(id_)
-        cheating_id_int += 1
-        hacked_id = base36encode(cheating_id_int)
-        future = self.send_log_command(hacked_id, n=1)
-
-        async def wrapper():
-            packet = await future
-            msg = packet.log_reply.log[0]
-            packet._data = msg
-            return packet
-
-        return wrapper()
-
-
-# WARN: for the above hack
-def base36encode(number, alphabet='0123456789abcdefghijklmnopqrstuvwxyz'):
-    base36 = ''
-    sign = ''
-
-    if 0 <= number < len(alphabet):
-        return sign + alphabet[number]
-
-    while number != 0:
-        number, i = divmod(number, len(alphabet))
-        base36 = alphabet[i] + base36
-
-    return sign + base36
-
-
-# WARN: for the above hack
-def base36decode(number):
-    return int(number, 36)
+        return self._send_msg_with_reply_type("get-message", {"id": id_})
