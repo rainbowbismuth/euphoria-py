@@ -23,9 +23,7 @@ import logging.config
 import datetime
 from asyncio import AbstractEventLoop, Future
 from typing import Optional
-
 import yaml
-
 from euphoria import Client, NickAndAuth
 from .client import EUPHORIA_URL
 from tiny_agent import Agent, SupervisorOneForOne
@@ -58,6 +56,8 @@ class BotConfig:
         self._nick = conf['nick']
         self._passcode = conf.get('passcode', "")
         self._uri_format = conf.get('uri_format', EUPHORIA_URL)
+        self._services_max_restarts = conf.get('services_max_restarts', 3)
+        self._services_max_restarts_period = conf.get('services_max_restarts_period', 15.0)
         self._services = conf.get('services', {})
 
     @property
@@ -101,6 +101,14 @@ class BotConfig:
         return self._uri_format
 
     @property
+    def services_max_restarts(self) -> int:
+        return self._services_max_restarts
+
+    @property
+    def services_max_restarts_period(self) -> float:
+        return self._services_max_restarts_period
+
+    @property
     def services(self) -> dict:
         """A mapping from service names, to a python module path.
 
@@ -115,6 +123,7 @@ def make_service_constructor(mod, bot):
     # Got caught by python's closure late binding...
     def construct():
         return mod.Service(bot)
+
     return construct
 
 
@@ -124,7 +133,8 @@ class Bot(Agent):
         self._config = config
         self._client = Client(config.room, config.uri_format, handle_pings=True, loop=loop)
         self._nick_and_auth = NickAndAuth(self._client, config.nick, config.passcode)
-        self._service_supervisor = SupervisorOneForOne(loop=loop)
+        self._service_supervisor = SupervisorOneForOne(max_restarts=config.services_max_restarts,
+                                                       period=config.services_max_restarts_period, loop=loop)
         self._start_time = datetime.datetime.now()
 
         for short_name, module_path in config.services.items():
@@ -179,11 +189,12 @@ class Bot(Agent):
     async def set_passcode(self, new_passcode: str) -> Optional[str]:
         return await self._nick_and_auth.set_passcode(new_passcode)
 
-    def send_content(self, content: str, parent: Optional[str]=None) -> Future:
+    def send_content(self, content: str, parent: Optional[str] = None) -> Future:
         return self._client.send_content(content, parent)
 
     def add_listener(self, listener: Agent):
         self._client.add_listener(listener)
+
 
 def main():
     logging.config.dictConfig(yaml.load(open('logging.yml').read()))
@@ -195,6 +206,6 @@ def main():
     logger.info("main() bot shutdown!")
     loop.run_until_complete(asyncio.wait(asyncio.Task.all_tasks(loop=loop)))  # Let everything else shutdown cleanly
 
+
 if __name__ == '__main__':
     main()
-
