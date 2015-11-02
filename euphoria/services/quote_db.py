@@ -32,6 +32,25 @@ class Service(Agent):
         self._set_re = re.compile("!quote set (.*)")
         self._get_re = re.compile("!quote get (.*)")
         self._del_re = re.compile("!quote delete (.*)")
+        self._find_re = re.compile("!quote find (.*)")
+
+    @Agent.send
+    async def find(self, regex: str, parent: str):
+        output = []
+        with shelve.open('quotes.db', 'r') as db:
+            compiled = re.compile(regex)
+            for key in db.keys():
+                if compiled.search(key):
+                    output.append("matches quote name: " + key)
+                if key in db and compiled.search(db[key]):
+                    output.append("matches quote text: " + key)
+                if len(output) >= 5:
+                    output.append("search limited to the first 5 results")
+                    break
+        if output:
+            self._bot.send_content('\n'.join(output), parent=parent)
+        else:
+            self._bot.send_content('no matches found, sorry', parent=parent)
 
     @Agent.send
     async def on_packet(self, packet: Packet):
@@ -43,8 +62,11 @@ class Service(Agent):
                 parent = await self._bot.send_get_message(send_event.parent)
                 message = parent.data
                 with shelve.open('quotes.db', 'c') as db:
-                    db[name] = "{0}: {1}".format(message.sender.name, message.content)
-                self._bot.send_content("acknowledged!", parent=send_event.id)
+                    if name in db:
+                        self._bot.send_content("a quote already exists with this name", parent=send_event.id)
+                    else:
+                        db[name] = "[ {0} ] {1}".format(message.sender.name, message.content)
+                        self._bot.send_content("acknowledged!", parent=send_event.id)
                 return
 
             get_match = self._get_re.match(send_event.content)
@@ -68,4 +90,11 @@ class Service(Agent):
                         self._bot.send_content("sorry, no quote exists with that name", parent=send_event.id)
                 return
 
-            self._bot.send_content("usage: !quote [set|get|delete] quote_name", parent=send_event.id)
+            find_match = self._find_re.match(send_event.content)
+            if find_match:
+                regex = find_match.group(1)
+                self.find(regex, send_event.id)
+                return
+
+            self._bot.send_content("usage: !quote [ set | get | delete ] quote_name\n"
+                                   "usage: !quote find text_or_regex", parent=send_event.id)

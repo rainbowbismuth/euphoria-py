@@ -6,7 +6,7 @@ formatters:
 handlers:
   console:
     class: logging.StreamHandler
-    level: DEBUG
+    level: INFO
     formatter: simple
     stream: ext://sys.stdout
   rotate_log:
@@ -17,5 +17,5 @@ handlers:
     maxBytes: 16777216
     backupCount: 6
 root:
-  level: INFO
+  level: DEBUG
   handlers: [console, rotate_log]
