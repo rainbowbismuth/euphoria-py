@@ -17,16 +17,18 @@
 """A high-level easy to use bot interface."""
 
 import asyncio
+import datetime
 import importlib
 import logging
 import logging.config
-import datetime
 from asyncio import AbstractEventLoop, Future
 from typing import Optional
+
 import yaml
+
 from euphoria import Client, NickAndAuth
-from .client import EUPHORIA_URL
 from tiny_agent import Agent, SupervisorOneForOne
+from .client import EUPHORIA_URL
 
 __all__ = ['BotConfig', 'Bot']
 
