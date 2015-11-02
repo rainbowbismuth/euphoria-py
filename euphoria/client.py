@@ -192,7 +192,7 @@ class Client(Agent):
             d["parent"] = parent
         return self._send_msg_with_reply_type("send", d)
 
-    def send_log_command(self, before: str, n: int=10) -> Future:
+    def send_log_command(self, before: str, n: int = 10) -> Future:
         return self._send_msg_with_reply_type("log", {"before": before, "n": n})
 
     def send_get_message(self, id_: str) -> Future:
@@ -205,11 +205,13 @@ class Client(Agent):
         cheating_id_int += 1
         hacked_id = base36encode(cheating_id_int)
         future = self.send_log_command(hacked_id, n=1)
+
         async def wrapper():
             packet = await future
             msg = packet.log_reply.log[0]
             packet._data = msg
             return packet
+
         return wrapper()
 
 
