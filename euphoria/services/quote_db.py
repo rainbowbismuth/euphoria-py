@@ -21,6 +21,29 @@ from euphoria import Bot, Packet
 from tiny_agent import Agent
 
 
+class Quote:
+    def __init__(self, sender, content, time):
+        self._sender = sender
+        self._content = content
+        self._time = time
+
+    @property
+    def sender(self):
+        return self._sender
+
+    @property
+    def content(self):
+        return self._content
+
+    @property
+    def joined(self):
+        return "[ {0} ] {1}".format(self.sender, self.content)
+
+    @property
+    def time(self):
+        return self._time
+
+
 class Service(Agent):
     def __init__(self, bot: Bot):
         super(Service, self).__init__(loop=bot.loop)
@@ -38,11 +61,15 @@ class Service(Agent):
             compiled = re.compile(regex)
             for key in db.keys():
                 if compiled.search(key):
-                    output.append("matches quote name: " + key)
-                if key in db and compiled.search(db[key]):
-                    output.append("matches quote text: " + key)
+                    output.append("found match in name: " + key)
+                if key in db:
+                    record = db[key]
+                    if compiled.search(record.sender):
+                        output.append("found match in sender: " + key)
+                    if compiled.search(record.content):
+                        output.append("found match in content: " + key)
                 if len(output) >= 5:
-                    output.append("search limited to the first 5 results")
+                    output.append("search limited to the first few results")
                     break
         if output:
             self._bot.send_content('\n'.join(output), parent=parent)
@@ -62,7 +89,7 @@ class Service(Agent):
                     if name in db:
                         self._bot.send_content("a quote already exists with this name", parent=send_event.id)
                     else:
-                        db[name] = "[ {0} ] {1}".format(message.sender.name, message.content)
+                        db[name] = Quote(sender=message.sender.name, content=message.content, time=message.time)
                         self._bot.send_content("acknowledged!", parent=send_event.id)
                 return
 
@@ -71,7 +98,7 @@ class Service(Agent):
                 name = get_match.group(1)
                 with shelve.open('quotes.db', 'r') as db:
                     if name in db:
-                        self._bot.send_content(db[name], parent=send_event.id)
+                        self._bot.send_content(db[name].joined, parent=send_event.id)
                     else:
                         self._bot.send_content("sorry, no quote exists with that name", parent=send_event.id)
                 return
