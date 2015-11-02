@@ -38,6 +38,7 @@ class SupervisorOneForOne(Agent):
     def __init__(self, period: float = 60.0, max_restarts: int = 3, loop: AbstractEventLoop = None):
         super(SupervisorOneForOne, self).__init__(loop=loop)
         self._max_restarts = max_restarts
+        self._restarts = 0
         self._period = period
         self._period_task = None
         self._children = {}
@@ -49,34 +50,37 @@ class SupervisorOneForOne(Agent):
         assert name not in self._children
         child = factory()
         self.monitor(child)
-        self._children[name] = (factory, 0)
+        self._children[name] = factory
         self._agent_to_name[child] = name
         self._name_to_agent[name] = child
 
     async def _period_task_body(self):
         await asyncio.sleep(self._period)
         if self.alive:
-            for key in self._children.keys():
-                (factory, _) = self._children[key]
-                self._children[key] = (factory, 0)
+            logger.debug("%s: resetting restart count", self)
+            self._restarts = 0
         self._period_task = None
 
     @Agent.send
     async def on_monitored_exit(self, who: Agent, exc: Optional[Exception]):
         assert who in self._agent_to_name
         name = self._agent_to_name[who]
-        logger.info("%s: the agent %s named %s stopped because %s", self, who, name, exc)
-        (factory, num) = self._children[name]
-        if num >= self._max_restarts:
+        if exc:
+            logger.info("%s: the agent %s named %s stopped because %s", self, who, name, exc)
+        else:
+            logger.info("%s: the agent %s named %s has stopped normally", self, who, name)
+
+        if self._restarts >= self._max_restarts:
             raise TooManyRestarts
+        self._restarts += 1
 
         if self._period_task:
             self._period_task.cancel()
         self._period_task = asyncio.ensure_future(self._period_task_body(), loop=self._loop)
 
+        factory = self._children[name]
         new_child = factory()
         self.monitor(new_child)
-        self._children[name] = (factory, num + 1)
         self._agent_to_name[new_child] = name
         self._name_to_agent[name] = new_child
 
@@ -109,7 +113,7 @@ class SupervisorOneForAll(Agent):
         if exc:
             logger.info("%s: the agent %s stopped because %s", self, who, exc)
         else:
-            logger.info("%s: the agent %s stopped normally.", self, who)
+            logger.info("%s: the agent %s stopped normally", self, who)
         if self._restarts >= 3:
             raise TooManyRestarts
         self._restarts += 1

@@ -95,7 +95,7 @@ class Client(Agent):
                         if listener.alive:
                             listener.on_packet(packet)
                         else:
-                            to_remove.append(to_remove)
+                            to_remove.append(listener)
                     for listener in to_remove:
                         self._listeners.remove(listener)
             except (Exception, CancelledError) as exc:
@@ -191,3 +191,10 @@ class Client(Agent):
         if parent:
             d["parent"] = parent
         return self._send_msg_with_reply_type("send", d)
+
+    def send_get_message(self, id_: str) -> Future:
+        """Sends a get-message command to the server.
+
+        :returns: A future that will contain a :py:class:`euphoria.GetMessageReply`
+        :rtype: asyncio.Future"""
+        return self._send_msg_with_reply_type("get-message", {"id": id_})

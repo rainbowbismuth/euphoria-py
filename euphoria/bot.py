@@ -194,6 +194,9 @@ class Bot(Agent):
     def send_content(self, content: str, parent: Optional[str] = None) -> Future:
         return self._client.send_content(content, parent)
 
+    def send_get_message(self, id_: str) -> Future:
+        return self._client.send_get_message(id_)
+
     def add_listener(self, listener: Agent):
         self._client.add_listener(listener)
 
