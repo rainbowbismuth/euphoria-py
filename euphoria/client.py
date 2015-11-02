@@ -76,7 +76,6 @@ class Client(Agent):
                 while self.alive:
                     msg = await self._sock.recv()
                     if msg is None:
-                        self.exit()
                         return
                     logger.debug("%s got message %s", self, msg)
                     packet = Packet(json.loads(msg))
@@ -103,7 +102,7 @@ class Client(Agent):
                 await self._sock.close()
                 self._receiver = None
                 self.exit(exc)
-            else:
+            finally:
                 self.exit()
 
         self._receiver = asyncio.ensure_future(receive_loop(), loop=self._loop)
