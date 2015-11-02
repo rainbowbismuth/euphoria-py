@@ -16,131 +16,81 @@
 
 """Nickname and authentication state machines."""
 
-import asyncio
-from asyncio import Future
 import logging
-from euphoria import Client
+from asyncio import AbstractEventLoop
+from typing import Optional
+
+from euphoria import Client, Packet
+from tiny_agent import Agent
 
 logger = logging.getLogger(__name__)
 
 
-class NickAndAuth:
-    def __init__(self, client: Client, desired_nick: str, passcode: str = ""):
+__all__ = ['NickAndAuth']
+
+class NickAndAuth(Agent):
+    def __init__(self, client: Client, desired_nick: str, passcode: str = "", loop: AbstractEventLoop = None):
+        super(NickAndAuth, self).__init__(loop=loop)
         self._client = client
-        self._stream = client.stream()
+        self._client.add_listener(self)
+
         self._desired_nick = desired_nick
-        self._passcode = passcode
-        self._loop = client.loop
-        self._nick_future = None
-        self._passcode_future = None
-        self._partial_reset()
-        asyncio.ensure_future(self._main_task(), loop=self._loop)
-
-    def _partial_reset(self):
         self._current_nick = ""
+        self._passcode = passcode
         self._authorized = False
-        if self._nick_future:
-            self._nick_future.cancel()
-            self._nick_future = None
-        if self._passcode_future:
-            self._passcode_future.cancel()
-            self._passcode_future = None
-
-    @property
-    def current_nick(self) -> str:
-        """Returns your current nickname, which may not be the one you desire.
-
-        :rtype: str"""
-        return self._current_nick
 
     @property
     def desired_nick(self) -> str:
-        """Returns your desired nickname, which may not be your current one yet.
-
-        :rtype: str"""
         return self._desired_nick
 
     @property
-    def passcode(self) -> str:
-        """Returns the passcode you will try on a BounceEvent.
+    def current_nick(self) -> str:
+        return self._current_nick
 
-        :rtype: str"""
+    @property
+    def passcode(self) -> str:
         return self._passcode
 
     @property
     def authorized(self) -> bool:
-        """Returns whether or not you're authorized.
-
-        :rtype: bool"""
         return self._authorized
 
-    def set_desired_nick(self, new_nick: str) -> Future:
-        """Attempt to set your current_nick to new_nick.
-
-        :param str new_nick: The new nickname you want to try.
-        :returns: A future that will contain a string error message on failure, or None.
-        :rtype: asyncio.Future"""
+    @Agent.call
+    async def set_desired_nick(self, new_nick: str) -> Optional[str]:
         self._desired_nick = new_nick
-        if self._current_nick != self._desired_nick:
-            self._nick_future = asyncio.ensure_future(self._nick_setter(), loop=self._loop)
+        packet = await self._client.send_nick(new_nick)
+        if packet.error:
+            return packet.error
         else:
-            self._nick_future = asyncio.ensure_future(Future(loop=self._loop).set_result(None), loop=self._loop)
-        return self._nick_future
-
-    async def _nick_setter(self):
-        logger.debug("%s: trying to set nick to %s", self, self._desired_nick)
-        reply = await self._client.send_nick(self._desired_nick)
-        if not reply.error:
-            self._current_nick = reply.data.to
-            self._desired_nick = reply.data.to
-            logger.debug("%s: succeeded in setting nick to %s", self, self._current_nick)
+            nick_reply = packet.nick_reply
+            self._current_nick = nick_reply.to
+            self._desired_nick = nick_reply.to
             return None
-        else:
-            return reply.error
 
-    def set_passcode(self, new_passcode: str) -> Future:
-        """Sets your passcode to new_passcode and attempts to authenticate if not already.
-
-        :param str new_passcode: The new passcode you want to try.
-        :returns: A future that will contain a string error message on failure, or None.
-        :rtype: asyncio.Future"""
+    @Agent.call
+    async def set_passcode(self, new_passcode: str) -> Optional[str]:
         self._passcode = new_passcode
-        if not self._authorized:
-            self._passcode_future = asyncio.ensure_future(self._passcode_setter(), loop=self._loop)
+        packet = await self._client.send_auth(new_passcode)
+        if packet.error:
+            return packet.error
         else:
-            self._passcode_future = asyncio.ensure_future(Future(loop=self._loop).set_result(None), loop=self._loop)
-        return self._passcode_future
-
-    async def _passcode_setter(self):
-        logger.debug("%s: trying to set passcode to %s", self, self._passcode)
-        reply = await self._client.send_auth(self._passcode)
-        if not reply.error and reply.data.success:
+            auth_reply = packet.auth_reply
+            assert auth_reply.success
             self._authorized = True
             self.set_desired_nick(self._desired_nick)
-            logger.debug("%s: successfully authenticated with passcode", self)
             return None
-        else:
-            return reply.error
 
-    async def _main_task(self):
-        while True:
-            packet = await self._stream.any()
+    @Agent.send
+    async def on_packet(self, packet: Packet):
+        hello_event = packet.hello_event
+        if hello_event:
+            self._current_nick = hello_event.session.name
+            self._authorized = not hello_event.room_is_private
+            if self._authorized:
+                self.set_desired_nick(self._desired_nick)
+            return
 
-            msg = packet.hello_event
-            if msg:
-                logger.debug("%s: got HelloEvent", self)
-                self._partial_reset()
-                self._current_nick = msg.session.name
-                self._authorized = not msg.room_is_private
-                if self._authorized:
-                    self.set_desired_nick(self.desired_nick)
-                continue
-
-            msg = packet.bounce_event
-            if msg:
-                logger.debug("%s: got BounceEvent", self)
-                self._partial_reset()
-                self._current_nick = ""
-                self._authorized = False
-                if "passcode" in msg.auth_options:
-                    self.set_passcode(self.passcode)
+        bounce_event = packet.bounce_event
+        if bounce_event:
+            self._authorized = False
+            self.set_passcode(self._passcode)

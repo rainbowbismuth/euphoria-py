@@ -16,22 +16,20 @@
 
 """Say '!nick' new_nick to change the bots name to new_nick"""
 
-from euphoria import SendEvent, Bot
+from euphoria import Bot, Packet
+from tiny_agent import Agent
 
 
-async def main(bot: Bot):
-    """Entry point into the !nick' service.
+class Service(Agent):
+    def __init__(self, bot: Bot):
+        super(Service, self).__init__(loop=bot.loop)
+        bot.add_listener(self)
+        self._bot = bot
 
-    This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
-
-    :param euphoria.Bot bot: This service's bot"""
-    client = bot.client
-    nick_and_auth = bot.nick_and_auth
-    stream = client.stream()
-    while True:
-        packet = await stream.skip_until_type(SendEvent)
+    @Agent.send
+    async def on_packet(self, packet: Packet):
         send_event = packet.send_event
-        if send_event.content[0:5] == "!nick":
-            error = await nick_and_auth.set_desired_nick(send_event.content[6:])
+        if send_event and send_event.content.startswith("!nick"):
+            error = await self._bot.set_desired_nick(send_event.content[6:])
             if error:
-                client.send("error: {0}".format(error), parent=send_event.id)
+                self._bot.send_content(error, parent=send_event.id)

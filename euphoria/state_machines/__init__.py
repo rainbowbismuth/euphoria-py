@@ -14,6 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from .nick_and_auth import NickAndAuth
+from .nick_and_auth import *
 
-__all__ = ['nick_and_auth']
+__all__ = nick_and_auth.__all__

@@ -1,4 +1,4 @@
-# euphoria-py v0.3
+# euphoria-py v0.7
 [![Build Status](https://travis-ci.org/rainbowbismuth/euphoria-py.svg)](https://travis-ci.org/rainbowbismuth/euphoria-py)
 
 An asyncio based euphoria.io bot library for Python 3.5.

@@ -20,7 +20,8 @@ import linecache
 import os
 import tracemalloc
 
-from euphoria import SendEvent, Bot
+from euphoria import Bot, Packet
+from tiny_agent import Agent
 
 tracemalloc.start()
 
@@ -55,18 +56,16 @@ def display_top(snapshot, group_by='lineno', limit=10):
     return '\n'.join(lines)
 
 
-async def main(bot: Bot):
-    """Entry point into the '!alloc' service.
+class Service(Agent):
+    def __init__(self, bot: Bot):
+        super(Service, self).__init__(loop=bot.loop)
+        bot.add_listener(self)
+        self._bot = bot
 
-    This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
-
-    :param euphoria.Bot bot: This service's bot"""
-    client = bot.client
-    stream = client.stream()
-    while True:
-        packet = await stream.skip_until_type(SendEvent)
+    @Agent.send
+    async def on_packet(self, packet: Packet):
         send_event = packet.send_event
-        if send_event.content.startswith("!alloc"):
+        if send_event and send_event.content.startswith("!alloc"):
             snapshot = tracemalloc.take_snapshot()
             line = display_top(snapshot)
-            client.send(line, parent=send_event.id)
+            await self._bot.send_content(line, parent=send_event.id)

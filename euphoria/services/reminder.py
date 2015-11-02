@@ -19,37 +19,32 @@
 import asyncio
 import re
 
-from euphoria import SendEvent, Bot, Client
+from euphoria import Bot, Packet
+from tiny_agent import Agent
 
 
-async def chill_and_respond(client: Client, length: int, msg: str):
-    await asyncio.sleep(length, loop=client.loop)
-    if not client.closed:
-        await client.send(msg)
+async def chill_and_respond(bot: Bot, length: int, msg: str):
+    await asyncio.sleep(length, loop=bot.loop)
+    if bot.connected:
+        bot.send_content(msg)
 
 
-async def main(bot: Bot):
-    """Entry point into the '!remind' service.
+class Service(Agent):
+    def __init__(self, bot: Bot):
+        super(Service, self).__init__(loop=bot.loop)
+        bot.add_listener(self)
+        self._bot = bot
+        self._minute_re = re.compile("!remind (\d+)m (.*)")
 
-    This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
-
-    :param euphoria.Bot bot: This service's bot"""
-    minute_re = re.compile("!remind (\d+)m (.*)")
-    client = bot.client
-    stream = client.stream()
-    while True:
-        packet = await stream.skip_until_type(SendEvent)
+    @Agent.send
+    async def on_packet(self, packet: Packet):
         send_event = packet.send_event
-
-        if send_event.content.startswith("!remind"):
-            match = minute_re.match(send_event.content)
+        if send_event and send_event.content.startswith("!remind"):
+            match = self._minute_re.match(send_event.content)
             if match:
                 minutes = float(match.group(1))
                 msg = "reminder @{0}: {1}".format(send_event.sender.name, match.group(2))
-                asyncio.ensure_future(chill_and_respond(client,
-                                                        minutes * 60, msg))
-                await client.send("acknowledged!", parent=send_event.id)
+                asyncio.ensure_future(chill_and_respond(self._bot, minutes * 60, msg), loop=self.loop)
+                await self._bot.send_content("acknowledged!", parent=send_event.id)
             else:
-                await client.send("usage: !remind 15m go on a walk", parent=send_event.id)
-        else:
-            continue
+                await self._bot.send_content("usage: !remind 15m go on a walk", parent=send_event.id)

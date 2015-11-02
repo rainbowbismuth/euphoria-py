@@ -17,4 +17,4 @@
 from .agent import *
 from .supervisor import *
 
-__all__ = [agent.__all__, supervisor.__all__]
+__all__ = (agent.__all__ + supervisor.__all__)

@@ -44,15 +44,6 @@ euphoria.exceptions module
     :undoc-members:
     :show-inheritance:
 
-euphoria.stream module
-----------------------
-
-.. automodule:: euphoria.stream
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
 Module contents
 ---------------
 

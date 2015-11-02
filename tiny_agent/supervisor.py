@@ -53,7 +53,7 @@ class SupervisorOneForOne(Agent):
     async def on_monitored_exit(self, who: Agent, exc: Optional[Exception]):
         assert who in self._agent_to_name
         name = self._agent_to_name[who]
-        logger.info("%s: the agent %s named %s failed because %s", self, who, name, exc)
+        logger.info("%s: the agent %s named %s stopped because %s", self, who, name, exc)
         (factory, num) = self._children[name]
         if num >= 3:
             raise TooManyRestarts
@@ -90,7 +90,10 @@ class SupervisorOneForAll(Agent):
     async def on_monitored_exit(self, who: Agent, exc: Optional[Exception]):
         if who not in self._agent_to_name:
             return
-        logger.info("%s: the agent %s failed because %s", self, who, exc)
+        if exc:
+            logger.info("%s: the agent %s stopped because %s", self, who, exc)
+        else:
+            logger.info("%s: the agent %s stopped normally.", self, who)
         if self._restarts >= 3:
             raise TooManyRestarts
         self._restarts += 1

@@ -13,6 +13,8 @@ Table of Contents
    euphoria.services
    euphoria.state_machines
    euphoria.test
+   tiny_agent
+   tiny_agent.test
    modules
 
 Indices and tables

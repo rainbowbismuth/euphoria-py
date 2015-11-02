@@ -16,7 +16,7 @@
 
 import asyncio
 import logging
-from asyncio import AbstractEventLoop, Queue, Future
+from asyncio import AbstractEventLoop, Queue, Future, Task
 from typing import Optional
 from weakref import WeakSet
 
@@ -41,7 +41,7 @@ class Agent:
                 if result is not None:
                     logger.warning("%s tried to return a result in a @Agent.send method, %s", self, f)
 
-            if not self.exited:
+            if self.alive:
                 self._queue.put_nowait(do_it)
 
         return send_wrapper
@@ -55,7 +55,7 @@ class Agent:
                 x = await f(self, *args, **kwargs)
                 future.set_result(x)
 
-            if not self.exited:
+            if self.alive:
                 self._queue.put_nowait(do_it)
             return future
 
@@ -70,8 +70,12 @@ class Agent:
         return self._task is None
 
     @property
-    def loop(self) -> bool:
+    def loop(self) -> AbstractEventLoop:
         return self._loop
+
+    @property
+    def task(self) -> Task:
+        return self._task
 
     def bidirectional_link(self, to: 'Agent'):
         self._links.add(to)
@@ -84,7 +88,7 @@ class Agent:
     async def _main(self):
         # noinspection PyBroadException
         try:
-            while True:
+            while self.alive:
                 fun = await self._queue.get()
                 await fun()
         except Exception as exc:
@@ -93,10 +97,15 @@ class Agent:
             self.exit(None)
 
     def exit(self, exc: Optional[Exception] = None):
+        old_task = self._task
         try:
             if self.exited:
                 return
-            logger.debug("%s is exiting because %s", self, exc)
+            self._task = None
+            if exc:
+                logger.debug("%s is exiting because %s", self, exc)
+            else:
+                logger.debug("%s is exiting normally", self)
             for link in self._links:
                 link.exit(exc)
 
@@ -107,9 +116,8 @@ class Agent:
                 else:
                     logger.warning("%s was monitoring an agent %s, but doesn't implemented on_monitored_exit",
                                    monitor, self)
-
-            self._task.cancel()
         finally:
-            self._links = WeakSet()
-            self._monitors = WeakSet()
-            self._task = None
+            if old_task is not None:
+                old_task.cancel()
+                self._links = WeakSet()
+                self._monitors = WeakSet()

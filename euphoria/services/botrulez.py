@@ -16,54 +16,55 @@
 
 """Implements the !ping, !uptime, !kill, and !restart from https://github.com/jedevc/botrulez"""
 
-import sys
-import re
 import datetime
-from euphoria import SendEvent, Bot
+import re
+
+from euphoria import Bot, Packet
+from tiny_agent import Agent
 
 
-async def main(bot: Bot):
-    """Entry point into the botrulez service.
+class Service(Agent):
+    def __init__(self, bot: Bot):
+        super(Service, self).__init__(loop=bot.loop)
+        bot.add_listener(self)
+        self._bot = bot
 
-    This method is a `coroutine <https://docs.python.org/3/library/asyncio-task.html#coroutines>`_.
+        self._ping_re = re.compile("!ping @(.*)")
+        self._uptime_re = re.compile("!uptime @(.*)")
+        self._kill_re = re.compile("!kill @(.*)")
+        self._restart_re = re.compile("!restart @(.*)")
 
-    :param euphoria.Bot bot: This service's bot"""
-    ping_re = re.compile("!ping @(.*)")
-    uptime_re = re.compile("!uptime @(.*)")
-    kill_re = re.compile("!kill @(.*)")
-    restart_re = re.compile("!restart @(.*)")
-
-    client = bot.client
-    stream = client.stream()
-    while True:
-        packet = await stream.skip_until_type(SendEvent)
+    @Agent.send
+    async def on_packet(self, packet: Packet):
         send_event = packet.send_event
+        if not send_event:
+            return
 
-        ping_match = ping_re.match(send_event.content)
+        ping_match = self._ping_re.match(send_event.content)
         if ping_match:
-            if not ping_match.group(1) == bot.nick_and_auth.current_nick:
-                continue
-            client.send("pong!", parent=send_event.id)
-            continue
+            if ping_match.group(1) == self._bot.current_nick:
+                await self._bot.send_content("pong!", parent=send_event.id)
+            return
 
-        uptime_match = uptime_re.match(send_event.content)
+        uptime_match = self._uptime_re.match(send_event.content)
         if uptime_match:
-            if not uptime_match.group(1) == bot.nick_and_auth.current_nick:
-                continue
+            if uptime_match.group(1) != self._bot.current_nick:
+                return
+
             now = datetime.datetime.now()
-            diff = now - bot.start_time
-            client.send("/me has been up since {0} ({1})".format(bot.start_time.ctime(), str(diff)),
-                        parent=send_event.id)
-            continue
+            diff = now - self._bot.start_time
+            await self._bot.send_content("/me has been up since {0} ({1})".format(self._bot.start_time.ctime(),
+                                                                                  str(diff)), parent=send_event.id)
+            return
 
-        kill_match = kill_re.match(send_event.content)
+        kill_match = self._kill_re.match(send_event.content)
         if kill_match:
-            if not kill_match.group(1) == bot.nick_and_auth.current_nick:
-                continue
-            sys.exit()
+            if kill_match.group(1) == self._bot.current_nick:
+                self._bot.exit()
+                return
 
-        restart_match = restart_re.match(send_event.content)
+        restart_match = self._restart_re.match(send_event.content)
         if restart_match:
-            if not restart_match.group(1) == bot.nick_and_auth.current_nick:
-                continue
-            bot.restart()
+            if restart_match.group(1) == self._bot.current_nick:
+                self._bot.exit()
+                return
