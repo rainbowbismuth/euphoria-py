@@ -20,7 +20,7 @@ from typing import Any, List
 from .exceptions import ErrorResponse
 
 __all__ = ['Packet', 'SessionView', 'Message', 'SendEvent', 'SnapshotEvent', 'JoinEvent', 'HelloEvent', 'BounceEvent',
-           'PingEvent', 'NetworkEvent', 'NickEvent', 'SendReply', 'NickReply', 'GetMessageReply']
+           'PingEvent', 'NetworkEvent', 'NickEvent', 'SendReply', 'NickReply', 'GetMessageReply', 'LogReply']
 
 
 class SessionViewBased:
@@ -483,6 +483,20 @@ class PartEvent(SessionViewBased):
     """A PartEvent indicates a session just disconnected from the room."""
 
 
+class LogReply:
+    def __init__(self, j: dict):
+        self._before = j.get('before', None)
+        self._log = [Message(x) for x in j['log']]
+
+    @property
+    def before(self) -> str:
+        return self._before
+
+    @property
+    def log(self) -> List[Message]:
+        return self._log
+
+
 class Packet:
     """A message received from Euphoria"""
 
@@ -622,6 +636,11 @@ class Packet:
         if self.is_type(GetMessageReply):
             return self.data
 
+    @property
+    def log_reply(self) -> LogReply:
+        if self.is_type(LogReply):
+            return self.data
+
 
 DATA_TYPES = {'hello-event': HelloEvent,
               'snapshot-event': SnapshotEvent,
@@ -636,4 +655,5 @@ DATA_TYPES = {'hello-event': HelloEvent,
               'send-reply': SendReply,
               'join-event': JoinEvent,
               'part-event': PartEvent,
-              'get-message-reply': GetMessageReply}
+              'get-message-reply': GetMessageReply,
+              'log-reply': LogReply }

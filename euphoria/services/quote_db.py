@@ -21,7 +21,7 @@ from euphoria import Bot, Packet
 from tiny_agent import Agent
 
 
-# Currently only works in a public room
+# Currently only works in a public room w/o hacks.
 
 
 class Service(Agent):

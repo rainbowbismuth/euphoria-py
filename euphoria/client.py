@@ -22,7 +22,7 @@ import logging
 from asyncio import Future, AbstractEventLoop, CancelledError
 from typing import Tuple, Optional
 import websockets
-from euphoria import Packet, PingEvent
+from euphoria import Packet, PingEvent, GetMessageReply
 from tiny_agent import Agent
 
 __all__ = ['Client']
@@ -192,9 +192,42 @@ class Client(Agent):
             d["parent"] = parent
         return self._send_msg_with_reply_type("send", d)
 
+    def send_log_command(self, before: str, n: int=10) -> Future:
+        return self._send_msg_with_reply_type("log", {"before": before, "n": n})
+
     def send_get_message(self, id_: str) -> Future:
         """Sends a get-message command to the server.
 
-        :returns: A future that will contain a :py:class:`euphoria.GetMessageReply`
+        :returns: A future that would contain a :py:class:`euphoria.GetMessageReply`, if it wasn't for a hack
         :rtype: asyncio.Future"""
-        return self._send_msg_with_reply_type("get-message", {"id": id_})
+        # TODO: HUGE HACK / WORK AROUND
+        cheating_id_int = base36decode(id_)
+        cheating_id_int += 1
+        hacked_id = base36encode(cheating_id_int)
+        future = self.send_log_command(hacked_id, n=1)
+        async def wrapper():
+            packet = await future
+            msg = packet.log_reply.log[0]
+            packet._data = msg
+            return packet
+        return wrapper()
+
+
+# WARN: for the above hack
+def base36encode(number, alphabet='0123456789abcdefghijklmnopqrstuvwxyz'):
+    base36 = ''
+    sign = ''
+
+    if 0 <= number < len(alphabet):
+        return sign + alphabet[number]
+
+    while number != 0:
+        number, i = divmod(number, len(alphabet))
+        base36 = alphabet[i] + base36
+
+    return sign + base36
+
+
+# WARN: for the above hack
+def base36decode(number):
+    return int(number, 36)
