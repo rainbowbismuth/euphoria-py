@@ -1,0 +1,20 @@
+borg:
+  alpha-bot:
+    bot:
+      room: test
+      nick: alpha-bot-euphoria-py
+      services:
+        botrulez: euphoria.services.botrulez
+        nick_change: euphoria.services.nick_change
+        alloc: euphoria.services.alloc
+        reminder: euphoria.services.reminder
+
+  beta-bot:
+    bot:
+      room: test
+      nick: beta-bot-euphoria-py
+      services:
+        botrulez: euphoria.services.botrulez
+        nick_change: euphoria.services.nick_change
+        alloc: euphoria.services.alloc
+        reminder: euphoria.services.reminder
