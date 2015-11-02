@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import asyncio
 import logging
 from asyncio import AbstractEventLoop
 from typing import Optional, Callable
@@ -34,8 +35,11 @@ class TooManyRestarts(Exception):
 
 
 class SupervisorOneForOne(Agent):
-    def __init__(self, loop: AbstractEventLoop=None):
+    def __init__(self, period: float=60.0, max_restarts: int=3, loop: AbstractEventLoop=None):
         super(SupervisorOneForOne, self).__init__(loop=loop)
+        self._max_restarts = max_restarts
+        self._period = period
+        self._period_task = None
         self._children = {}
         self._agent_to_name = {}
         self._name_to_agent = {}
@@ -49,14 +53,26 @@ class SupervisorOneForOne(Agent):
         self._agent_to_name[child] = name
         self._name_to_agent[name] = child
 
+    async def _period_task_body(self):
+        await asyncio.sleep(self._period)
+        if self.alive:
+            for key in self._children.keys():
+                (factory, _) = self._children[key]
+                self._children[key] = (factory, 0)
+        self._period_task = None
+
     @Agent.send
     async def on_monitored_exit(self, who: Agent, exc: Optional[Exception]):
         assert who in self._agent_to_name
         name = self._agent_to_name[who]
         logger.info("%s: the agent %s named %s stopped because %s", self, who, name, exc)
         (factory, num) = self._children[name]
-        if num >= 3:
+        if num >= self._max_restarts:
             raise TooManyRestarts
+
+        if self._period_task:
+            self._period_task.cancel()
+        self._period_task = asyncio.ensure_future(self._period_task_body(), loop=self._loop)
 
         new_child = factory()
         self.monitor(new_child)

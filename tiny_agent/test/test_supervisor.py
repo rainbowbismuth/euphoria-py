@@ -50,6 +50,42 @@ def test_one_for_one():
     loop.run_until_complete(task())
 
 
+def test_one_for_one_period_reset():
+    loop = asyncio.get_event_loop()
+    one_for_one = SupervisorOneForOne(max_restarts=1, period=0.15, loop=loop)
+    one_for_one.add_child("bomb", lambda: Bomb(loop=loop))
+
+    async def task():
+        bomb = await one_for_one.get("bomb")
+        bomb.explode()
+        await asyncio.sleep(0.20)
+        bomb = await one_for_one.get("bomb")
+        bomb.explode()
+        await asyncio.sleep(0.20)
+        bomb = await one_for_one.get("bomb")
+        bomb.explode()
+        await asyncio.sleep(0.20)
+        assert one_for_one.alive, "we're not dead because the period elapses and resets the restart counter"
+
+    loop.run_until_complete(task())
+
+
+def test_one_for_one_period_failure():
+    loop = asyncio.get_event_loop()
+    one_for_one = SupervisorOneForOne(max_restarts=1, period=0.15, loop=loop)
+    one_for_one.add_child("bomb", lambda: Bomb(loop=loop))
+
+    async def task():
+        bomb = await one_for_one.get("bomb")
+        bomb.explode()
+        await asyncio.sleep(0.10)
+        bomb = await one_for_one.get("bomb")
+        bomb.explode()
+        await asyncio.sleep(0.10)
+        assert one_for_one.exited, "we're dead because we exploded twice too fast."
+
+    loop.run_until_complete(task())
+
 class RestartOnly(Agent):
     def __init__(self, loop=None):
         super(RestartOnly, self).__init__(loop=loop)
