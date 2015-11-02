@@ -22,7 +22,7 @@ import logging
 from asyncio import Future, AbstractEventLoop, CancelledError
 from typing import Tuple, Optional
 import websockets
-from euphoria import Packet, PingEvent, GetMessageReply
+from euphoria import Packet, PingEvent, SendReply
 from tiny_agent import Agent
 
 __all__ = ['Client']
@@ -76,6 +76,7 @@ class Client(Agent):
                 while self.alive:
                     msg = await self._sock.recv()
                     if msg is None:
+                        self.exit()
                         return
                     logger.debug("%s got message %s", self, msg)
                     packet = Packet(json.loads(msg))
