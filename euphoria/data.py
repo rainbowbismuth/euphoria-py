@@ -118,6 +118,7 @@ class MessageBased:
         """The ID of the edit. None if this isn't an EditMessageEvent.
 
         :rtype: str"""
+        return self._edit_id
 
     @property
     def parent(self) -> str:
