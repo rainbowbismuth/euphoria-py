@@ -14,7 +14,7 @@ handlers:
     level: DEBUG
     formatter: simple
     filename: 'bot.log'
-    maxBytes: 16777216
+    maxBytes: 1048576
     backupCount: 6
 root:
   level: DEBUG
