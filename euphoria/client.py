@@ -104,7 +104,7 @@ class Client(Agent):
             finally:
                 await self._sock.close()
 
-        self._receiver = self.spawn_linked_task(receive_loop())
+        self._receiver = self.spawn_linked_task(receive_loop(), unlink_on_success=False)
 
     def add_listener(self, listener: Agent):
         self._listeners.add(listener)
