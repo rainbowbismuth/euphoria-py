@@ -20,7 +20,7 @@ from asyncio import AbstractEventLoop, Queue, Future, Task
 from typing import Optional
 from weakref import WeakSet
 
-__all__ = ['Agent']
+__all__ = ['Agent', 'LinkedTask']
 
 logger = logging.getLogger(__name__)
 
@@ -81,9 +81,16 @@ class Agent:
         self._links.add(to)
         to._links.add(self)
 
+    def unlink(self, from_: 'Agent'):
+        self._links.remove(from_)
+        from_._links.remove(self)
+
     def monitor(self, monitored: 'Agent'):
         self._links.add(monitored)
         monitored._monitors.add(self)
+
+    def spawn_linked_task(self, coro_or_future) -> 'LinkedTask':
+        return LinkedTask(self, coro_or_future, loop=self._loop)
 
     async def _main(self):
         # noinspection PyBroadException
@@ -121,3 +128,19 @@ class Agent:
                 old_task.cancel()
                 self._links = WeakSet()
                 self._monitors = WeakSet()
+
+
+class LinkedTask(Agent):
+    def __init__(self, linked_to: Agent, coro_or_future, loop: AbstractEventLoop=None):
+        super(LinkedTask, self).__init__(loop=loop)
+        self.bidirectional_link(linked_to)
+        async def do_it():
+            try:
+                result = await coro_or_future
+                if result is not None:
+                    logger.warning("%s tried to return a result from a LinkedTask, %s", coro_or_future, self)
+                self.unlink(linked_to)  # We finished successfully so lets not kill our friend when we die
+            finally:
+                self.exit()
+        self._queue.put_nowait(do_it)
+

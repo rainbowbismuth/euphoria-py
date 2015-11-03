@@ -44,3 +44,37 @@ def test_counter():
         assert result == 3, "we incremented three times"
 
     loop.run_until_complete(task())
+
+
+def test_linked_task_successful():
+    loop = asyncio.get_event_loop()
+    agent = Agent(loop=loop)
+
+    async def mini_task():
+        await asyncio.sleep(0.05)
+        return
+
+    async def task():
+        mini = agent.spawn_linked_task(mini_task())
+        await asyncio.sleep(0.10)
+        assert mini.exited, "this tiny task should have exited 0.05 seconds ago"
+        assert agent.alive, "it should have unlinked to keep the main task alive when it finished successfully"
+
+    loop.run_until_complete(task())
+
+
+def test_linked_task_failure():
+    loop = asyncio.get_event_loop()
+    agent = Agent(loop=loop)
+
+    async def mini_bomb():
+        await asyncio.sleep(0.05)
+        raise Exception("ka-boom!")
+
+    async def task():
+        mini = agent.spawn_linked_task(mini_bomb())
+        await asyncio.sleep(0.10)
+        assert mini.exited, "we exploded"
+        assert agent.exited, "our linked task should have taken us down too"
+
+    loop.run_until_complete(task())
