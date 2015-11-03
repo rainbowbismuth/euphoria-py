@@ -19,9 +19,12 @@
 import asyncio
 import json
 import logging
-from asyncio import Future, AbstractEventLoop, CancelledError
-from typing import Tuple, Optional
+from asyncio import Future, AbstractEventLoop
+from typing import Tuple
+
 import websockets
+
+import tiny_agent
 from euphoria import Packet, PingEvent
 from tiny_agent import Agent
 
@@ -65,7 +68,7 @@ class Client(Agent):
     def connected(self) -> bool:
         return self._sock and self._sock.open
 
-    @Agent.send
+    @tiny_agent.send
     async def connect(self):
         assert self.alive, "we better be alive to be connected"
         assert not self.connected, "make sure we don't get connected twice ever"
@@ -122,7 +125,7 @@ class Client(Agent):
             del self._reply_map[id_]
             return future
 
-    @Agent.send
+    @tiny_agent.send
     async def _send_packet(self, packet: str):
         if self.connected:
             logger.debug("%s sending message %s", self, packet)

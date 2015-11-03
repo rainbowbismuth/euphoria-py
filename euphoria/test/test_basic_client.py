@@ -18,6 +18,7 @@ import asyncio
 import logging
 from asyncio import AbstractEventLoop
 
+import tiny_agent
 from euphoria import Client, Packet
 from tiny_agent import Agent
 
@@ -28,7 +29,7 @@ class Basic(Agent):
         self._client = client
         self._client.add_listener(self)
 
-    @Agent.send
+    @tiny_agent.send
     async def on_packet(self, packet: Packet):
         hello_event = packet.hello_event
         if hello_event:

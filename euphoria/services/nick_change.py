@@ -16,6 +16,7 @@
 
 """Say '!nick' new_nick to change the bots name to new_nick"""
 
+import tiny_agent
 from euphoria import Bot, Packet
 from tiny_agent import Agent
 
@@ -26,7 +27,7 @@ class Service(Agent):
         bot.add_listener(self)
         self._bot = bot
 
-    @Agent.send
+    @tiny_agent.send
     async def on_packet(self, packet: Packet):
         send_event = packet.send_event
         if send_event and send_event.content.startswith("!nick"):

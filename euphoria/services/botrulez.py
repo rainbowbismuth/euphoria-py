@@ -18,6 +18,8 @@
 
 import datetime
 import re
+
+import tiny_agent
 from euphoria import Bot, Packet
 from tiny_agent import Agent
 
@@ -33,7 +35,7 @@ class Service(Agent):
         self._kill_re = re.compile("!kill @(.*)")
         self._restart_re = re.compile("!restart @(.*)")
 
-    @Agent.send
+    @tiny_agent.send
     async def on_packet(self, packet: Packet):
         send_event = packet.send_event
         if not send_event:

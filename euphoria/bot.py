@@ -26,6 +26,7 @@ from typing import Optional
 
 import yaml
 
+import tiny_agent
 from euphoria import Client, NickAndAuth
 from tiny_agent import Agent, SupervisorOneForOne
 from .client import EUPHORIA_URL
@@ -183,11 +184,11 @@ class Bot(Agent):
     def authorized(self) -> bool:
         return self._nick_and_auth.authorized
 
-    @Agent.call
+    @tiny_agent.call
     async def set_desired_nick(self, new_nick: str) -> Optional[str]:
         return await self._nick_and_auth.set_desired_nick(new_nick)
 
-    @Agent.call
+    @tiny_agent.call
     async def set_passcode(self, new_passcode: str) -> Optional[str]:
         return await self._nick_and_auth.set_passcode(new_passcode)
 

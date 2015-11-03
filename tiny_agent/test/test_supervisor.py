@@ -17,13 +17,14 @@
 import asyncio
 from typing import Optional
 from tiny_agent import Agent, SupervisorOneForOne, SupervisorOneForAll, Restart, TooManyRestarts
+import tiny_agent
 
 
 class Bomb(Agent):
     def __init__(self, loop=None):
         super(Bomb, self).__init__(loop=loop)
 
-    @Agent.send
+    @tiny_agent.send
     async def explode(self):
         raise Exception("boom!")
 

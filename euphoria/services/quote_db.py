@@ -19,7 +19,7 @@ import shelve
 
 from euphoria import Bot, Packet
 from tiny_agent import Agent
-
+import tiny_agent
 
 class Quote:
     def __init__(self, sender, content, time):
@@ -54,7 +54,7 @@ class Service(Agent):
         self._del_re = re.compile("!quote delete (.*)")
         self._find_re = re.compile("!quote find (.*)")
 
-    @Agent.send
+    @tiny_agent.send
     async def find(self, regex: str, parent: str):
         output = []
         with shelve.open('quotes.db', 'r') as db:
@@ -76,7 +76,7 @@ class Service(Agent):
         else:
             self._bot.send_content('no matches found, sorry', parent=parent)
 
-    @Agent.send
+    @tiny_agent.send
     async def on_packet(self, packet: Packet):
         send_event = packet.send_event
         if send_event and send_event.content.startswith("!quote"):

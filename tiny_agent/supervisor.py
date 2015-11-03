@@ -18,8 +18,8 @@ import asyncio
 import logging
 from asyncio import AbstractEventLoop
 from typing import Optional, Callable
-
 from tiny_agent import Agent
+import tiny_agent
 
 __all__ = ['SupervisorOneForOne', 'SupervisorOneForAll', 'Restart', 'TooManyRestarts']
 
@@ -45,7 +45,7 @@ class SupervisorOneForOne(Agent):
         self._agent_to_name = {}
         self._name_to_agent = {}
 
-    @Agent.send
+    @tiny_agent.send
     async def add_child(self, name: str, factory: Callable[[], Agent]):
         assert name not in self._children
         child = factory()
@@ -61,7 +61,7 @@ class SupervisorOneForOne(Agent):
             self._restarts = 0
         self._period_task = None
 
-    @Agent.send
+    @tiny_agent.send
     async def on_monitored_exit(self, who: Agent, exc: Optional[Exception]):
         assert who in self._agent_to_name
         name = self._agent_to_name[who]
@@ -84,7 +84,7 @@ class SupervisorOneForOne(Agent):
         self._agent_to_name[new_child] = name
         self._name_to_agent[name] = new_child
 
-    @Agent.call
+    @tiny_agent.call
     async def get(self, name: str, default: Optional[Agent] = None) -> Optional[Agent]:
         return self._name_to_agent.get(name, default)
 
@@ -97,7 +97,7 @@ class SupervisorOneForAll(Agent):
         self._name_to_agent = {}
         self._restarts = 0
 
-    @Agent.send
+    @tiny_agent.send
     async def add_child(self, name: str, factory: Callable[[], Agent]):
         assert name not in self._children
         child = factory()
@@ -106,7 +106,7 @@ class SupervisorOneForAll(Agent):
         self._agent_to_name[child] = name
         self._name_to_agent[name] = child
 
-    @Agent.send
+    @tiny_agent.send
     async def on_monitored_exit(self, who: Agent, exc: Optional[Exception]):
         if who not in self._agent_to_name:
             return
@@ -128,6 +128,6 @@ class SupervisorOneForAll(Agent):
         self._agent_to_name = {}
         self._name_to_agent = {}
 
-    @Agent.call
+    @tiny_agent.call
     async def get(self, name: str, default: Optional[Agent] = None) -> Optional[Agent]:
         return self._name_to_agent.get(name, default)

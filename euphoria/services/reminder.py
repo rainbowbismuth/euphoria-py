@@ -18,6 +18,8 @@
 
 import asyncio
 import re
+
+import tiny_agent
 from euphoria import Bot, Packet
 from tiny_agent import Agent
 
@@ -35,7 +37,7 @@ class Service(Agent):
         self._bot = bot
         self._minute_re = re.compile("!remind (\d+)m (.*)")
 
-    @Agent.send
+    @tiny_agent.send
     async def on_packet(self, packet: Packet):
         send_event = packet.send_event
         if send_event and send_event.content.startswith("!remind"):

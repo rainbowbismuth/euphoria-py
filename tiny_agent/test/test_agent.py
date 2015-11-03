@@ -16,6 +16,7 @@
 
 import asyncio
 from tiny_agent import Agent
+import tiny_agent
 
 
 class Counter(Agent):
@@ -23,11 +24,11 @@ class Counter(Agent):
         super(Counter, self).__init__(loop=loop)
         self._counter = 0
 
-    @Agent.send
+    @tiny_agent.send
     async def increment(self):
         self._counter += 1
 
-    @Agent.call
+    @tiny_agent.call
     async def current(self) -> int:
         return self._counter
 

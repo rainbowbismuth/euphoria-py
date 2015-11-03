@@ -20,9 +20,37 @@ from asyncio import AbstractEventLoop, Queue, Future, Task
 from typing import Optional
 from weakref import WeakSet
 
-__all__ = ['Agent', 'LinkedTask']
+__all__ = ['Agent', 'LinkedTask', 'send', 'call']
 
 logger = logging.getLogger(__name__)
+
+
+def send(f):
+    def send_wrapper(self: 'Agent', *args, **kwargs) -> None:
+        async def do_it():
+            result = await f(self, *args, **kwargs)
+            if result is not None:
+                logger.warning("%s tried to return a result in a @Agent.send method, %s", self, f)
+
+        if self.alive:
+            self._queue.put_nowait(do_it)
+
+    return send_wrapper
+
+
+def call(f):
+    def call_wrapper(self: 'Agent', *args, **kwargs) -> Future:
+        future = Future(loop=self._loop)
+
+        async def do_it():
+            x = await f(self, *args, **kwargs)
+            future.set_result(x)
+
+        if self.alive:
+            self._queue.put_nowait(do_it)
+        return future
+
+    return call_wrapper
 
 
 class Agent:
@@ -32,34 +60,6 @@ class Agent:
         self._monitors = WeakSet()
         self._queue = Queue(loop=self._loop)
         self._task = asyncio.ensure_future(self._main(), loop=self._loop)
-
-    @classmethod
-    def send(cls, f):
-        def send_wrapper(self: 'Agent', *args, **kwargs) -> None:
-            async def do_it():
-                result = await f(self, *args, **kwargs)
-                if result is not None:
-                    logger.warning("%s tried to return a result in a @Agent.send method, %s", self, f)
-
-            if self.alive:
-                self._queue.put_nowait(do_it)
-
-        return send_wrapper
-
-    @classmethod
-    def call(cls, f):
-        def call_wrapper(self: 'Agent', *args, **kwargs) -> Future:
-            future = Future(loop=self._loop)
-
-            async def do_it():
-                x = await f(self, *args, **kwargs)
-                future.set_result(x)
-
-            if self.alive:
-                self._queue.put_nowait(do_it)
-            return future
-
-        return call_wrapper
 
     @property
     def alive(self) -> bool:

@@ -19,6 +19,8 @@
 import logging
 from asyncio import AbstractEventLoop
 from typing import Optional
+
+import tiny_agent
 from euphoria import Client, Packet
 from tiny_agent import Agent
 
@@ -54,7 +56,7 @@ class NickAndAuth(Agent):
     def authorized(self) -> bool:
         return self._authorized
 
-    @Agent.call
+    @tiny_agent.call
     async def set_desired_nick(self, new_nick: str) -> Optional[str]:
         self._desired_nick = new_nick
         packet = await self._client.send_nick(new_nick)
@@ -66,7 +68,7 @@ class NickAndAuth(Agent):
             self._desired_nick = nick_reply.to
             return None
 
-    @Agent.call
+    @tiny_agent.call
     async def set_passcode(self, new_passcode: str) -> Optional[str]:
         self._passcode = new_passcode
         packet = await self._client.send_auth(new_passcode)
@@ -79,7 +81,7 @@ class NickAndAuth(Agent):
             self.set_desired_nick(self._desired_nick)
             return None
 
-    @Agent.send
+    @tiny_agent.send
     async def on_packet(self, packet: Packet):
         hello_event = packet.hello_event
         if hello_event:
