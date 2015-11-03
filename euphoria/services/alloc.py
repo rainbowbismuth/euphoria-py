@@ -58,7 +58,7 @@ def display_top(snapshot, group_by='lineno', limit=10):
 
 
 class Service(Agent):
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: Bot, _: dict):
         super(Service, self).__init__(loop=bot.loop)
         bot.add_listener(self)
         self._bot = bot

@@ -61,7 +61,18 @@ class BotConfig:
         self._uri_format = conf.get('uri_format', EUPHORIA_URL)
         self._services_max_restarts = conf.get('services_max_restarts', 3)
         self._services_max_restarts_period = conf.get('services_max_restarts_period', 15.0)
-        self._services = conf.get('services', {})
+
+        self._services = {}
+        # Way better handling could go here
+        for key, val in conf.get('services', {}).items():
+            if isinstance(val, str):
+                self._services[key] = {"module": val}
+            elif isinstance(val, dict):
+                assert "module" in val, "Service config dictionary must have a module key"
+                self._services[key] = val
+            else:
+                raise Exception("BotConfig services must have a string or dictionary value.")
+            self._services[key]["short_name"] = key
 
     @property
     def room(self) -> str:
@@ -113,7 +124,7 @@ class BotConfig:
 
     @property
     def services(self) -> dict:
-        """A mapping from service names, to a python module path.
+        """A mapping from service names, dict contains a python module path under the "module" key.
 
         Defaults to an empty map.
 
@@ -122,10 +133,10 @@ class BotConfig:
         return self._services
 
 
-def make_service_constructor(mod, bot):
+def make_service_constructor(mod, bot: 'Bot', config: dict):
     # Got caught by python's closure late binding...
     def construct():
-        return mod.Service(bot)
+        return mod.Service(bot, config)
 
     return construct
 
@@ -140,9 +151,9 @@ class Bot(Agent):
                                                        period=config.services_max_restarts_period, loop=loop)
         self._start_time = datetime.datetime.now()
 
-        for short_name, module_path in config.services.items():
-            mod = importlib.import_module(module_path)
-            self._service_supervisor.add_child(short_name, make_service_constructor(mod, self))
+        for short_name, config in config.services.items():
+            mod = importlib.import_module(config["module"])
+            self._service_supervisor.add_child(short_name, make_service_constructor(mod, self, config))
 
         self.bidirectional_link(self._client)
         self.bidirectional_link(self._nick_and_auth)
