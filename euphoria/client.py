@@ -98,24 +98,10 @@ class Client(Agent):
                             to_remove.append(listener)
                     for listener in to_remove:
                         self._listeners.remove(listener)
-            except (Exception, CancelledError) as exc:
-                await self._sock.close()
-                self._receiver = None
-                self.exit(exc)
             finally:
-                self.exit()
+                await self._sock.close()
 
-        self._receiver = asyncio.ensure_future(receive_loop(), loop=self._loop)
-
-    def exit(self, exc: Optional[Exception] = None):
-        # noinspection PyBroadException
-        try:
-            if self.alive and self._receiver:
-                self._receiver.cancel()
-        except:
-            logger.error("%s: exception occurred in overridden exit()", self, exc_info=True)
-        finally:
-            super(Client, self).exit(exc)
+        self._receiver = self.spawn_linked_task(receive_loop())
 
     def add_listener(self, listener: Agent):
         self._listeners.add(listener)
