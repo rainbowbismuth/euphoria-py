@@ -1,7 +1,8 @@
 # euphoria-py v0.7
 [![Build Status](https://travis-ci.org/rainbowbismuth/euphoria-py.svg)](https://travis-ci.org/rainbowbismuth/euphoria-py)
 
-An asyncio based euphoria.io bot library and framework for Python 3.5.
+An asyncio based euphoria.io bot library and framework for Python 3.5 and newer, ONLY. Make sure you are using the right
+version of pip and the python interpreter.
 
 API is expected to undergo major additions currently, and the documentation isn't all there yet.
 
@@ -53,5 +54,5 @@ in logging.yml (It uses the standard python logging framework, see the official 
 From this directory run:
 
 ```shell
-python3 -m euphoria.bot
+python -m euphoria.bot
 ```
