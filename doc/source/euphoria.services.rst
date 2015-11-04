@@ -36,6 +36,21 @@ euphoria.services.botrulez module
     :undoc-members:
     :show-inheritance:
 
+euphoria.services.quote_db module
+---------------------------------
+
+.. automodule:: euphoria.services.quote_db
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+euphoria.services.reddit_notify module
+--------------------------------------
+
+.. automodule:: euphoria.services.reddit_notify
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Module contents
 ---------------

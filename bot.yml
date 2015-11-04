@@ -3,6 +3,4 @@ bot:
   nick: euphoria-py
   services:
     botrulez: euphoria.services.botrulez
-    nick_change: euphoria.services.nick_change
-    alloc: euphoria.services.alloc
     reminder: euphoria.services.reminder
