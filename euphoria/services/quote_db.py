@@ -16,10 +16,11 @@
 
 import re
 import shelve
-
+import asyncio
 from euphoria import Bot, Packet
 from tiny_agent import Agent
 import tiny_agent
+
 
 class Quote:
     def __init__(self, sender, content, time):
@@ -57,7 +58,8 @@ class Service(Agent):
     @tiny_agent.send
     async def find(self, regex: str, parent: str):
         output = []
-        with shelve.open('quotes.db', 'r') as db:
+        try:
+            db = shelve.open('quotes.db', 'r')
             compiled = re.compile(regex)
             for key in db.keys():
                 if compiled.search(key):
@@ -71,6 +73,9 @@ class Service(Agent):
                 if len(output) >= 5:
                     output.append("search limited to the first few results")
                     break
+                await asyncio.sleep(0)
+        finally:
+            db.close()
         if output:
             self._bot.send_content('\n'.join(output), parent=parent)
         else:
