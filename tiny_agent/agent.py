@@ -153,6 +153,7 @@ class Agent:
 
 
 class LinkedTask(Agent):
+    @init
     def __init__(self, linked_to: Agent, coro_or_future, unlink_on_success: bool = True,
                  loop: AbstractEventLoop = None):
         super(LinkedTask, self).__init__(loop=loop)
