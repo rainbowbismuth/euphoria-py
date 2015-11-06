@@ -62,6 +62,7 @@ class SubredditWatcher:
 
 
 class Service(Agent):
+    @tiny_agent.init
     def __init__(self, bot: Bot, config: dict):
         super(Service, self).__init__(loop=bot.loop)
         self._bot = bot

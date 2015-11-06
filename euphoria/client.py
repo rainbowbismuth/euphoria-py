@@ -36,6 +36,7 @@ EUPHORIA_URL = "wss://euphoria.io:443/room/{0}/ws"
 
 
 class Client(Agent):
+    @tiny_agent.init
     def __init__(self, room: str, uri_format: str = EUPHORIA_URL,
                  handle_pings: bool = True, loop: AbstractEventLoop = None):
         super(Client, self).__init__(loop=loop)

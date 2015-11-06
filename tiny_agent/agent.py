@@ -21,7 +21,7 @@ from functools import wraps
 from typing import Optional
 from weakref import WeakSet
 
-__all__ = ['Agent', 'LinkedTask', 'send', 'call']
+__all__ = ['Agent', 'LinkedTask', 'send', 'call', 'init']
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +54,25 @@ def call(f):
         return future
 
     return call_wrapper
+
+
+def init(f):
+    @wraps(f)
+    def init_wrapper(self: 'Agent', *args, **kwargs):
+        self._init_exception = None
+
+        async def did_we_make_it():
+            if self.alive and self._init_exception:
+                self.exit(self._init_exception)
+
+        try:
+            f(self, *args, **kwargs)
+        except Exception as exc:
+            self._init_exception = exc
+        finally:
+            asyncio.ensure_future(did_we_make_it(), loop=self.loop)
+
+    return init_wrapper
 
 
 class Agent:

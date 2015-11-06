@@ -142,6 +142,7 @@ def make_service_constructor(mod, bot: 'Bot', config: dict):
 
 
 class Bot(Agent):
+    @tiny_agent.init
     def __init__(self, config: BotConfig, loop: AbstractEventLoop = None):
         super(Bot, self).__init__(loop=loop)
         self._config = config

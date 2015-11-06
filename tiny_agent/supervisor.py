@@ -35,6 +35,7 @@ class TooManyRestarts(Exception):
 
 
 class SupervisorOneForOne(Agent):
+    @tiny_agent.init
     def __init__(self, period: float = 60.0, max_restarts: int = 3, loop: AbstractEventLoop = None):
         super(SupervisorOneForOne, self).__init__(loop=loop)
         self._max_restarts = max_restarts
@@ -90,6 +91,7 @@ class SupervisorOneForOne(Agent):
 
 
 class SupervisorOneForAll(Agent):
+    @tiny_agent.init
     def __init__(self, loop: AbstractEventLoop = None):
         super(SupervisorOneForAll, self).__init__(loop=loop)
         self._children = {}

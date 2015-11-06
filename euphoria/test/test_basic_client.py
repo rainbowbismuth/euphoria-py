@@ -24,6 +24,7 @@ from tiny_agent import Agent
 
 
 class Basic(Agent):
+    @tiny_agent.init
     def __init__(self, client: Client, loop: AbstractEventLoop = None):
         super(Basic, self).__init__(loop=loop)
         self._client = client

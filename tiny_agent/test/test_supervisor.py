@@ -21,6 +21,7 @@ import tiny_agent
 
 
 class Bomb(Agent):
+    @tiny_agent.init
     def __init__(self, loop=None):
         super(Bomb, self).__init__(loop=loop)
 

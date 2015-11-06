@@ -20,6 +20,7 @@ import tiny_agent
 
 
 class Counter(Agent):
+    @tiny_agent.init
     def __init__(self, loop=None):
         super(Counter, self).__init__(loop=loop)
         self._counter = 0

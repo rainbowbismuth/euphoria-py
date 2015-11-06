@@ -30,6 +30,7 @@ __all__ = ['NickAndAuth']
 
 
 class NickAndAuth(Agent):
+    @tiny_agent.init
     def __init__(self, client: Client, desired_nick: str, passcode: str = "", loop: AbstractEventLoop = None):
         super(NickAndAuth, self).__init__(loop=loop)
         self._client = client
