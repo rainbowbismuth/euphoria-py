@@ -17,6 +17,7 @@
 import asyncio
 import logging
 from asyncio import AbstractEventLoop, Queue, Future, Task
+from functools import wraps
 from typing import Optional
 from weakref import WeakSet
 
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 def send(f):
+    @wraps(f)
     def send_wrapper(self: 'Agent', *args, **kwargs) -> None:
         async def do_it():
             result = await f(self, *args, **kwargs)
@@ -39,6 +41,7 @@ def send(f):
 
 
 def call(f):
+    @wraps(f)
     def call_wrapper(self: 'Agent', *args, **kwargs) -> Future:
         future = Future(loop=self._loop)
 
