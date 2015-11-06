@@ -26,8 +26,7 @@ from tiny_agent import Agent
 
 async def chill_and_respond(bot: Bot, length: int, msg: str):
     await asyncio.sleep(length, loop=bot.loop)
-    if bot.connected:
-        bot.send_content(msg)
+    bot.send_content(msg)
 
 
 class Service(Agent):
@@ -46,7 +45,7 @@ class Service(Agent):
             if match:
                 minutes = float(match.group(1))
                 msg = "reminder @{0}: {1}".format(send_event.sender.name, match.group(2))
-                asyncio.ensure_future(chill_and_respond(self._bot, minutes * 60, msg), loop=self.loop)
+                self.spawn_linked_task(chill_and_respond(self._bot, minutes * 60, msg), unlink_on_success=True)
                 await self._bot.send_content("acknowledged!", parent=send_event.id)
             else:
                 await self._bot.send_content("usage: !remind 15m go on a walk", parent=send_event.id)
