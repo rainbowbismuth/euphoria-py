@@ -47,10 +47,12 @@ class Quote:
 
 class Service(Agent):
     @tiny_agent.init
-    def __init__(self, bot: Bot, _: dict):
+    def __init__(self, bot: Bot, config: dict):
         super(Service, self).__init__(loop=bot.loop)
         bot.add_listener(self)
         self._bot = bot
+        assert "db_file" in config, "quote_db must be configured with a distinct filename"
+        self._db_file = config["db_file"]
         self._set_re = re.compile("!quote set (.*)")
         self._get_re = re.compile("!quote get (.*)")
         self._del_re = re.compile("!quote delete (.*)")
@@ -60,7 +62,7 @@ class Service(Agent):
     async def find(self, regex: str, parent: str):
         output = []
         try:
-            db = shelve.open('quotes.db', 'r')
+            db = shelve.open(self._db_file, 'r')
             compiled = re.compile(regex)
             for key in db.keys():
                 if compiled.search(key):
@@ -91,7 +93,7 @@ class Service(Agent):
                 name = set_match.group(1)
                 parent = await self._bot.send_get_message(send_event.parent)
                 message = parent.data
-                with shelve.open('quotes.db', 'c') as db:
+                with shelve.open(self._db_file, 'c') as db:
                     if name in db:
                         self._bot.send_content("a quote already exists with this name", parent=send_event.id)
                     else:
@@ -102,7 +104,7 @@ class Service(Agent):
             get_match = self._get_re.match(send_event.content)
             if get_match:
                 name = get_match.group(1)
-                with shelve.open('quotes.db', 'r') as db:
+                with shelve.open(self._db_file, 'r') as db:
                     if name in db:
                         self._bot.send_content(db[name].joined, parent=send_event.id)
                     else:
@@ -112,7 +114,7 @@ class Service(Agent):
             del_match = self._del_re.match(send_event.content)
             if del_match:
                 name = del_match.group(1)
-                with shelve.open('quotes.db', 'w') as db:
+                with shelve.open(self._db_file, 'w') as db:
                     if name in db:
                         del db[name]
                         self._bot.send_content("quote deleted", parent=send_event.id)
