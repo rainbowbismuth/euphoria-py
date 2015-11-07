@@ -16,49 +16,41 @@
 
 import asyncio
 import logging
-from asyncio import AbstractEventLoop
-
-import tiny_agent
-from euphoria import Client, Packet
-from tiny_agent import Agent
+from asyncio import Queue
+from euphoria import connect, links, raise_early_exit_on_done, EarlyExit, Packet, SendQueue
 
 
-class Basic(Agent):
-    @tiny_agent.init
-    def __init__(self, client: Client, loop: AbstractEventLoop = None):
-        super(Basic, self).__init__(loop=loop)
-        self._client = client
-        self._client.add_listener(self)
-
-    @tiny_agent.send
-    async def on_packet(self, packet: Packet):
-        hello_event = packet.hello_event
-        if hello_event:
-            print("Hello, hello-event!")
-            if hello_event.room_is_private:
-                print("Goodbye, password-protected world!")
+@raise_early_exit_on_done
+async def basic(send: SendQueue, recv: Queue):
+    packet = await recv.get()  # type: Packet
+    hello_event = packet.hello_event
+    if hello_event:
+        print("Hello, hello-event!")
+        if hello_event.room_is_private:
+            print("Goodbye, password-protected world!")
+        else:
+            print("Room isn't private, let's try to set our nick!")
+            packet = await send.send_nick("basic-client-bot")  # type: Packet
+            if packet.error:
+                print("Oh no our nick was invalid because: {0}".format(packet.error))
             else:
-                print("Room isn't private, let's try to set our nick!")
-                packet = await self._client.send_nick("basic-client-bot")
-                if packet.error:
-                    print("Oh no our nick was invalid because: {0}".format(packet.error))
-                else:
-                    nick_reply = packet.nick_reply
-                    print("We did it! Our new nick is: {0}".format(nick_reply.to))
-            return self.exit()
+                nick_reply = packet.nick_reply
+                print("We did it! Our new nick is: {0}".format(nick_reply.to))
 
 
 def test_main():
     logging.basicConfig(level=logging.INFO)
     loop = asyncio.get_event_loop()
 
-    client = Client(room="test", loop=loop)
-    basic = Basic(client, loop=loop)
-    basic.bidirectional_link(client)  # Execute both client and basic until either of them stops.
-    client.connect()
+    async def main_task():
+        (connected, send, recv) = connect(room="test", loop=loop)
+        basic_task = asyncio.ensure_future(basic(send, recv), loop=loop)
+        try:
+            await links([connected, basic_task])
+        except EarlyExit:
+            pass
 
-    loop.run_until_complete(asyncio.wait([client.task, basic.task]))  # Wait on both
-    loop.run_until_complete(asyncio.wait(asyncio.Task.all_tasks(loop=loop)))  # Let everything else shutdown cleanly
+    loop.run_until_complete(asyncio.ensure_future(main_task(), loop=loop))
 
 
 if __name__ == '__main__':

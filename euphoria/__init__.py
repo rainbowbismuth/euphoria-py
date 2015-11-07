@@ -25,13 +25,9 @@ from .data import *
 # noinspection PyUnresolvedReferences
 from .client import *
 # noinspection PyUnresolvedReferences
-from .state_machines import *
-# noinspection PyUnresolvedReferences
-from .bot import *
+# from .bot import *
 
 __all__ = (supervisor.__all__ +
            exceptions.__all__ +
            data.__all__ +
-           client.__all__ +
-           state_machines.__all__ +
-           bot.__all__)
+           client.__all__)
