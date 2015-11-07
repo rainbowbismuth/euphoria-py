@@ -19,11 +19,21 @@
 import asyncio
 from asyncio import AbstractEventLoop, Event, CancelledError
 
-__all__ = ['retry_supervisor']
+__all__ = ['links', 'retry_supervisor']
 
 
-async def retry_supervisor(coro_factories: list, max_retries: int=3, reset_timer: float=60.0,
-                           loop: AbstractEventLoop=None):
+async def links(co_routines: list, loop: AbstractEventLoop = None):
+    (done, remaining) = await asyncio.wait(co_routines, loop=loop, return_when=asyncio.FIRST_EXCEPTION)
+    for task in remaining:
+        task.cancel()
+    for task in done:
+        exc = task.exception()
+        if exc:
+            raise exc
+
+
+async def retry_supervisor(coro_factories: list, max_retries: int = 3, reset_timer: float = 60.0,
+                           loop: AbstractEventLoop = None):
     failure_ev = Event(loop=loop)
     retries_ref = [0]
 
@@ -49,18 +59,13 @@ async def retry_supervisor(coro_factories: list, max_retries: int=3, reset_timer
             retries_ref[0] = 0
             failure_ev.clear()
 
-    reset_task = None
-    all_children = []
+    all_children = list(map(lambda f: asyncio.ensure_future(try_coro(f), loop=loop), coro_factories))
+    reset_task = asyncio.ensure_future(reset_retries(), loop=loop)
     try:
-        reset_task = asyncio.ensure_future(reset_retries(), loop=loop)
-        all_children = map(lambda f: asyncio.ensure_future(try_coro(f), loop=loop), coro_factories)
-        await asyncio.gather(*all_children, loop=loop)
+        await links(all_children, loop=loop)
     finally:
-        if reset_task:
-            reset_task.cancel()
-        for child in all_children:
-            if not child.done():
-                child.cancel()
+        reset_task.cancel()
+
 
 # TODO: Move these tests in euphoria/test
 

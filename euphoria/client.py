@@ -19,132 +19,49 @@
 import asyncio
 import json
 import logging
-from asyncio import Future, AbstractEventLoop
+from asyncio import Future, AbstractEventLoop, Queue, Task
 from typing import Tuple
 
 import websockets
 
-import tiny_agent
+import euphoria
 from euphoria import Packet, PingEvent
-from tiny_agent import Agent
 
-__all__ = ['Client']
+__all__ = ['SendQueue', 'connect']
 
 logger = logging.getLogger(__name__)
 
 EUPHORIA_URL = "wss://euphoria.io:443/room/{0}/ws"
 
 
-class Client(Agent):
-    @tiny_agent.init
-    def __init__(self, room: str, uri_format: str = EUPHORIA_URL,
-                 handle_pings: bool = True, loop: AbstractEventLoop = None):
-        super(Client, self).__init__(loop=loop)
+class SendQueue:
+    def __init__(self, loop: AbstractEventLoop = None):
+        self._loop = loop
+        self._queue = Queue(loop=loop)
         self._next_msg_id = 0xBEEF  # just for fun
-        self._reply_map = {}
-        self._room = room
-        self._uri = uri_format.format(room)
-        self._handle_pings = handle_pings
-        self._sock = None
-        self._receiver = None
-        self._listeners = set()
-
-    def __repr__(self):
-        fmt = "<euphoria.Client room='{0}' uri='{1}'>"
-        return fmt.format(self._room, self._uri)
 
     @property
-    def room(self) -> str:
-        return self._room
+    def underlying_queue(self) -> Queue:
+        """Returns the underlying asyncio queue.
 
-    @property
-    def uri(self) -> str:
-        return self._uri
-
-    @property
-    def handle_pings(self) -> bool:
-        return self._handle_pings
-
-    @property
-    def connected(self) -> bool:
-        return self._sock and self._sock.open
-
-    @tiny_agent.send
-    async def connect(self):
-        assert self.alive, "we better be alive to be connected"
-        assert not self.connected, "make sure we don't get connected twice ever"
-        self._sock = await websockets.connect(self._uri)
-
-        async def receive_loop():
-            try:
-                while self.alive:
-                    msg = await self._sock.recv()
-                    if msg is None:
-                        return
-                    logger.debug("%s got message %s", self, msg)
-                    packet = Packet(json.loads(msg))
-
-                    if packet.is_type(PingEvent) and self._handle_pings:
-                        self.send_ping_reply(packet.data.time)
-
-                    if packet.id is not None:
-                        # If the message has an ID that means its a response to a
-                        # message we sent, so we put it into the corresponding future.
-                        fut = self._take_reply_future(packet.id)
-                        if fut:
-                            fut.set_result(packet)
-
-                    to_remove = []
-                    for listener in self._listeners:
-                        if listener.alive:
-                            listener.on_packet(packet)
-                        else:
-                            to_remove.append(listener)
-                    for listener in to_remove:
-                        self._listeners.remove(listener)
-            finally:
-                await self._sock.close()
-
-        self._receiver = self.spawn_linked_task(receive_loop(), unlink_on_success=False)
-
-    def add_listener(self, listener: Agent):
-        self._listeners.add(listener)
+        :rtype: asyncio.Queue"""
+        return self._queue
 
     def _next_id_and_future(self) -> Tuple[str, Future]:
-        # Generate a new ID to put into a message we are about to send, and
-        # a corresponding future to receive the eventual reply from the server.
         id_ = str(self._next_msg_id)
-        future = asyncio.Future()
-        self._reply_map[id_] = future
+        future = asyncio.Future(loop=self._loop)
+        self._next_msg_id += 1
         return id_, future
 
-    def _take_reply_future(self, id_: str) -> Future:
-        # If there is a future for this ID, then we retrieve it and remove it
-        # from the map. (There will only be one response per ID.)
-        if id_ in self._reply_map:
-            future = self._reply_map[id_]
-            del self._reply_map[id_]
-            return future
-
-    @tiny_agent.send
-    async def _send_packet(self, packet: str):
-        if self.connected:
-            logger.debug("%s sending message %s", self, packet)
-            await self._sock.send(packet)
-
     def _send_msg_with_reply_type(self, type_: str, data: dict) -> Future:
-        # A small helper to send messages that will be replied to by the
-        # server.
         id_, future = self._next_id_and_future()
-        j = json.dumps({"type": type_, "id": id_, "data": data})
-        self._send_packet(j)
+        packet = {"type": type_, "id": id_, "data": data}
+        self._queue.put_nowait((future, packet))
         return future
 
     def _send_msg_no_reply(self, type_: str, data: dict) -> None:
-        # A small helper to send a message that won't receive a reply from the
-        # server.
-        j = json.dumps({"type": type_, "data": data})
-        self._send_packet(j)
+        packet = {"type": type_, "data": data}
+        self._queue.put_nowait((None, packet))
 
     def send_nick(self, name: str) -> Future:
         """Sends a nick command to the server.
@@ -188,6 +105,77 @@ class Client(Agent):
     def send_get_message(self, id_: str) -> Future:
         """Sends a get-message command to the server.
 
+        :param str id_: The ID of the message you wish to retrieve
         :returns: A future that would contain a :py:class:`euphoria.GetMessageReply`
         :rtype: asyncio.Future"""
         return self._send_msg_with_reply_type("get-message", {"id": id_})
+
+
+class Client:
+    def __init__(self, uri: str, handle_pings: bool, loop: AbstractEventLoop = None):
+        self._loop = loop
+        self._uri = uri
+        self._reply_map = {}
+        self._handle_pings = handle_pings
+        self._sock = None
+        self._send_queue = SendQueue(loop=loop)
+        self._receive_queue = Queue(loop=loop)
+
+    @property
+    def send_queue(self) -> SendQueue:
+        return self._send_queue
+
+    @property
+    def receive_queue(self) -> Queue:
+        return self._receive_queue
+
+    async def connect(self) -> None:
+        self._sock = await websockets.connect(self._uri)
+        await euphoria.links([self._receive_loop(), self._send_loop()], loop=self._loop)
+        return
+
+    def _take_reply_future(self, id_: str) -> Future:
+        # If there is a future for this ID, then we retrieve it and remove it
+        # from the map. (There will only be one response per ID.)
+        if id_ in self._reply_map:
+            future = self._reply_map[id_]
+            del self._reply_map[id_]
+            return future
+
+    async def _receive_loop(self):
+        while True:
+            msg = await self._sock.recv()
+            if msg is None:
+                raise Exception("client disconnected")
+
+            packet = Packet(json.loads(msg))
+
+            if packet.is_type(PingEvent) and self._handle_pings:
+                self._send_queue.send_ping_reply(packet.data.time)
+
+            if packet.id:
+                # If the message has an ID that means its a response to a
+                # message we sent, so we put it into the corresponding future.
+                fut = self._take_reply_future(packet.id)
+                if fut:
+                    fut.set_result(packet)
+
+            self._receive_queue.put_nowait(packet)
+
+    async def _send_loop(self):
+        while True:
+            (fut, packet) = await self._send_queue.underlying_queue.get()
+            if fut:
+                self._reply_map[packet["id"]] = fut
+            msg = json.dumps(packet)
+            await self._sock.send(msg)
+
+
+def connect(room: str, uri_format: str = EUPHORIA_URL, handle_pings: bool = True, loop: AbstractEventLoop = None) -> \
+        Tuple[Task, SendQueue, Queue]:
+    uri = uri_format.format(room)
+    client = Client(uri, handle_pings=handle_pings, loop=loop)
+    send = client.send_queue
+    receive = client.receive_queue
+    connect_task = asyncio.ensure_future(client.connect(), loop=loop)
+    return connect_task, send, receive
