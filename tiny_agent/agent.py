@@ -166,7 +166,9 @@ class LinkedTask(Agent):
                     logger.warning("%s tried to return a result from a LinkedTask, %s", coro_or_future, self)
                 if unlink_on_success:
                     self.unlink(linked_to)  # We finished successfully so lets not kill our friend when we die
-            finally:
+            except Exception:
+                raise
+            else:
                 self.exit()
 
         self._queue.put_nowait(do_it)
