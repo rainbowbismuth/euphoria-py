@@ -17,6 +17,8 @@
 """Euphoria client and bot library, for Python 3.5"""
 
 # noinspection PyUnresolvedReferences
+from .supervisor import *
+# noinspection PyUnresolvedReferences
 from .exceptions import *
 # noinspection PyUnresolvedReferences
 from .data import *
@@ -27,7 +29,8 @@ from .state_machines import *
 # noinspection PyUnresolvedReferences
 from .bot import *
 
-__all__ = (exceptions.__all__ +
+__all__ = (supervisor.__all__ +
+           exceptions.__all__ +
            data.__all__ +
            client.__all__ +
            state_machines.__all__ +
