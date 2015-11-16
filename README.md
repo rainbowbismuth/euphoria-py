@@ -44,6 +44,7 @@ bot:
       module: euphoria.services.reddit_notify
       reddit_agent: euphoria-py utility that notifies about new reddit posts
       subreddits: [pics, programming, funny]
+      daily_thread: True
 ```
 
 The bog logs information to the console and to a rotating log file by default, you can edit the configuration
