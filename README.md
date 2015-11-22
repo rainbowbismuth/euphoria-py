@@ -43,8 +43,14 @@ bot:
     reddit_notify:
       module: euphoria.services.reddit_notify
       reddit_agent: euphoria-py utility that notifies about new reddit posts
+      # A list of subreddits to look for new posts in
       subreddits: [pics, programming, funny]
-      daily_thread: True
+      # If threading is true then each new post goes in a thread specific to a particular subreddit instead of top-level
+      threading: True
+      # Customize the message the bot makes when there's a new post. Not all post elements used below have to be used
+      post_format: "{short_link} New post to {subreddit} by {author}: {title}"
+      # How many hours until a new per-subreddit thread is created
+      hours_per_thread: 12
 ```
 
 The bog logs information to the console and to a rotating log file by default, you can edit the configuration
