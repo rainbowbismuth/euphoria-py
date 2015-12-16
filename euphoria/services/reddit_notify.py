@@ -97,7 +97,7 @@ class Service(Agent):
                 watcher = SubredditWatcher(self._reddit, reddit_name, self._post_format, reply.send_reply.id)
                 self._watchers.append(watcher)
             else:
-                self._watchers.append(SubredditWatcher(self._reddit, reddit_name))
+                self._watchers.append(SubredditWatcher(self._reddit, reddit_name, self._post_format))
 
         for watcher in self._watchers:
             self._update_watcher(watcher)
